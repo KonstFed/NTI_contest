@@ -3,27 +3,26 @@ import math
 from matplotlib.pyplot import *
 import random
 import numpy as np
-
+dictionary = {
+    "0":0,
+    "1":1,
+    "2":2,
+    "3":3,
+    "4":4,
+    "5":5,
+    "6":6,
+    "7":7,
+    "8":8,
+    "9":9,
+    "A":10,
+    "B":11,
+    "C":12,
+    "D":13,
+    "E":14,
+    "F":15
+}
 def HexToTen(s):
-    dictionary = {
-        "0":0,
-        "1":1,
-        "2":2,
-        "3":3,
-        "4":4,
-        "5":5,
-        "6":6,
-        "7":7,
-        "8":8,
-        "9":9,
-        "A":10,
-        "B":11,
-        "C":12,
-        "D":13,
-        "E":14,
-        "F":15
-    }
-    answ = ""
+    global dictionary
     sum1= 0
     h = 0
     s1 = s[::-1]
@@ -52,13 +51,16 @@ def evaluation( x1=0, y1=0, x2=0, y2=0):
     dy = y2 - y1
     
     lenV = math.sqrt(xV*xV+yV*yV)
-    if lenV == 0:
+    if lenV <10:
         return 0.0
     xV = round(xV/lenV*4)
     yV = round(yV/lenV*4)
     yV1 = yV
     yV = xV
     xV = - yV1
+
+    yV2 = - yV
+    xV2 = - xV
     sign_x = 1 if dx>0 else -1 if dx<0 else 0
     sign_y = 1 if dy>0 else -1 if dy<0 else 0
     cnt = 0
@@ -81,7 +83,9 @@ def evaluation( x1=0, y1=0, x2=0, y2=0):
     
     xW = x + xV
     yW = y + yV
-    if xW >= 0 and xW<width and yW>=0 and yW<heigth and x >= 0 and y >= 0 and x < width and y<heigth and Grayscale[yW][xW] > Grayscale[y][x]:
+    xW2 = x + xV2
+    yW2 = y + yV2 
+    if xW >= 0 and xW<width and yW>=0 and yW<heigth and xW2 >= 0 and yW2 >= 0 and xW2 < width and yW2<heigth and Grayscale[yW][xW] > Grayscale[yW2][xW2]:
         cnt+=1
         #im.putpixel((x, y), (255, 0, 0))
 
@@ -100,8 +104,10 @@ def evaluation( x1=0, y1=0, x2=0, y2=0):
         t += 1
         xW = x + xV
         yW = y + yV
-        if xW >= 0 and xW<width and yW>=0 and yW<heigth and x >= 0 and y >= 0 and x < width and y<heigth :
-            if not likecolor (Grayscale[yW][xW], Grayscale[y][x]):
+        xW2 = x + xV2
+        yW2 = y + yV2
+        if xW >= 0 and xW<width and yW>=0 and yW<heigth and yW2 >= 0 and yW2 >= 0 and xW2 < width and yW2<heigth :
+            if not likecolor (Grayscale[yW][xW], Grayscale[yW2][xW2]):
                 cnt+=1
             #im.putpixel((x, y), (255, 0, 0))
         cnt_all +=1
@@ -192,8 +198,20 @@ def findLocalMax():
 def testRegion(x,y,corners):
     Segments = []
     masCen=[]
-    clist=searchCorners(x,y, Grayscale,  width, heigth, corners)
-    masCen = find_corner_center(corners)
+    masCen=searchCorners(x,y, Grayscale,  width, heigth, corners)
+
+    # for i in range(heigth):
+    #     for j in range(width):
+    #         if corners[i][j]==1:
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FFFF', 'RGB'))
+    #         elif corners[i][j]==1:# Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+    #         elif corners[i][j]==3:# Center of Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
+    #         elif corners[i][j]==7: # Harris points in region
+    #             im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
+    # showCoordinates([], im)
+
 
     for i in range(len(masCen)):
         for j in range(i+1,len(masCen)):
@@ -209,29 +227,46 @@ def testRegion(x,y,corners):
                     Segments.append([masCen[j][0],masCen[j][1],masCen[i][0],masCen[i][1]])
                     masCen[i].append(j)        
                     masCen[j].append(i)
+    masCen2=[]
+    for i in range(len(masCen)):
+        if len(masCen[i])>= 4:
+            masCen2.append([masCen[i][0], masCen[i][1],masCen[i][2], masCen[i][3], i])
+    for i in range(len(masCen2)):
+        found1=False
+        found2=False
+        for j in range(len(masCen2)):
+            if masCen2[i][2]==masCen2[j][-1]:
+                masCen2[i][2]=j
+                found1=True
+            if masCen2[i][3]==masCen2[j][-1]:
+                masCen2[i][3]=j
+                found2=True
+        if not found2:
+            del masCen2[i][3]        
+        if not found1:
+            del masCen2[i][2]
+
 
     Coordinates = []
-    if len(masCen)==4:
-        first=0
-        for i in range(len(masCen)):
-            if len(masCen[i])==4:
-                first=i
-                break
-        next_p=masCen[first][2]
-        cur_p=first
-        prev_p=-1
+    
+    first=0    
+    cur_p=first
+    prev_p=-1
 
-
-        while cur_p!=-1:
-            Coordinates.append([masCen[cur_p][0],masCen[cur_p][1]])
-            tmp=cur_p
-            if masCen[cur_p][2]==prev_p:
-                cur_p=masCen[cur_p][3]
-            else:
-                cur_p=masCen[cur_p][2]
-            prev_p=tmp
-            if cur_p == first:
-                break
+    if len(masCen2)==0:
+        return []
+    while cur_p!=-1:
+        Coordinates.append([masCen2[cur_p][0],masCen2[cur_p][1]])
+        tmp=cur_p
+        if len(masCen2[cur_p])!=5:
+            return []
+        if masCen2[cur_p][2]==prev_p:
+            cur_p=masCen2[cur_p][3]
+        else:
+            cur_p=masCen2[cur_p][2]
+        prev_p=tmp
+        if cur_p == first:
+            break
     return Coordinates
     
 def find_dist(x1,y1,x2,y2):
@@ -305,8 +340,8 @@ def find_corner_center(corners):
     for i in range(heigth):
         corners.append([])
         for j in range(width):
-            if corners[i][j] == 7:
-            
+            if corners[i][j] == 1:
+                cnt = 0
                 curmas = []
                 current = corners[i][j]
                 # masCorners[ind].append(corners[i].append(0))
@@ -322,7 +357,8 @@ def find_corner_center(corners):
                         for y in range(current[1]-1,current[1]+2 ):
                             if(x == current[0] and y == current[1]):
                                 continue
-                            if x>=0 and x<width and y>=0 and y<heigth and corners[y][x] == 7:
+                            if x>=0 and x<width and y>=0 and y<heigth and corners[y][x] == 1 and not([x,y] in curmas):
+                                cnt = cnt + 1
                                 if x < left:
                                     left = x
                                 if x > right:
@@ -333,11 +369,11 @@ def find_corner_center(corners):
                                     bottom = y
 
                                 curmas.append([x,y])  
-                             
-                cenx = int((left + right)/2)
-                ceny = int((top + bottom)/2)
-                corners[ceny][cenx] = 3
-                masCenPoint.append([cenx,ceny])
+                if cnt>5:            
+                    cenx = int((left + right)/2)
+                    ceny = int((top + bottom)/2)
+                    corners[ceny][cenx] = 3
+                    masCenPoint.append([cenx,ceny])
     return masCenPoint
 def searchCorners(ax,ay, img,  width,height, corners):
     cornerlist=[]
@@ -347,76 +383,140 @@ def searchCorners(ax,ay, img,  width,height, corners):
     c_color=objcolor
     t_y=ay
     b_y=ay
+    d=6
     while t_y>=0:
         n_x=-1
         c_color=objcolor
-        while likecolor(objcolor,c_color):            
-            if corners[t_y][l_border]==1:
-                cornerlist.append([t_y,l_border])  
+        while l_border>=0 and likecolor(objcolor,c_color):            
+            if corners[t_y][l_border] in [1,3,7] and not([l_border,t_y] in cornerlist):
+                cornerlist.append([l_border,t_y])  
                 corners[t_y][l_border]=7
-            else:
-                corners[t_y][l_border]=10
+            # else:
+            #     corners[t_y][l_border]=10
             l_border-=1
             if l_border<0:
                 break
             c_color=img[t_y][l_border]
             if n_x==-1 and t_y>0 and likecolor(objcolor,img[t_y-1][l_border]):
                 n_x=l_border
+        for xx in range(l_border-1, l_border-d, -1):
+            if xx<0:
+                break
+            if corners[t_y][xx] in [1,3,7] and not([xx,t_y] in cornerlist):
+                cornerlist.append([xx,t_y])  
+                corners[t_y][xx]=7
+            # else:
+            #     corners[t_y][xx]=10
+        
         c_color=objcolor
-        while likecolor(objcolor,c_color):
+        while r_border<width and likecolor(objcolor,c_color):
             #img[t_y][r_border]=500            
-            if corners[t_y][r_border]==1:
-                cornerlist.append([t_y,r_border])
+            if corners[t_y][r_border] in [1,3,7] and not([r_border,t_y] in cornerlist):
+                cornerlist.append([r_border,t_y])
                 corners[t_y][r_border]=7
-            else:
-                corners[t_y][r_border]=10
+            # else:
+            #     corners[t_y][r_border]=10
             r_border+=1
             if r_border>=width:
                 break
             c_color=img[t_y][r_border]  
             if n_x==-1 and t_y>0 and likecolor(objcolor,img[t_y-1][r_border]):
                 n_x=r_border
+        for xx in range(r_border+1, r_border+d):
+            if xx>=width:
+                break
+            if corners[t_y][xx] in [1,3,7] and not([xx,t_y] in cornerlist):
+                cornerlist.append([xx,t_y])  
+                corners[t_y][xx]=7
+            # else:
+            #     corners[t_y][xx]=10
         if n_x==-1:
             break
         l_border=n_x
         r_border=n_x
         t_y-=1
+    y=t_y-1
+    for t_y in range(y,y-d,-1):
+        if t_y<0:
+            break
+        for xx in range(l_border-3, r_border+3):
+            if xx>=width:
+                break
+            if xx<0:
+                continue
+            if corners[t_y][xx] in [1,3,7] and not([xx,t_y] in cornerlist):
+                cornerlist.append([xx,t_y])  
+                corners[t_y][xx]=7
+            # else:
+            #     corners[t_y][xx]=10
     t_y=ay
     while t_y>=0:
         n_x=-1
         c_color=objcolor
-        while likecolor(objcolor,c_color):
+        while l_border>=0 and likecolor(objcolor,c_color):
             #img[t_y][l_border]=500            
-            if corners[t_y][l_border]==1:
-                cornerlist.append([t_y,l_border])
+            if corners[t_y][l_border] in [1,3,7] and not([l_border,t_y] in cornerlist):
+                cornerlist.append([l_border,t_y])
                 corners[t_y][l_border]=7
-            else:
-                corners[t_y][l_border]=10      
+            # else:
+            #     corners[t_y][l_border]=10      
             l_border-=1
             if l_border<0:
                 break
             c_color=img[t_y][l_border]
             if n_x==-1 and t_y<height-1 and likecolor(objcolor,img[t_y+1][l_border]):
                 n_x=l_border
+        for xx in range(l_border-1, l_border-d, -1):
+            if xx<0:
+                break
+            if corners[t_y][xx] in [1,3,7] and not([xx,t_y] in cornerlist):
+                cornerlist.append([xx,t_y])  
+                corners[t_y][xx]=7
+            # else:
+            #     corners[t_y][xx]=10
         c_color=objcolor
-        while likecolor(objcolor,c_color):
+        while r_border<width and likecolor(objcolor,c_color):
             #img[t_y][r_border]=500            
-            if corners[t_y][r_border]==1:
-                cornerlist.append([t_y,r_border])
+            if corners[t_y][r_border] in [1,3,7] and not([r_border,t_y] in cornerlist):
+                cornerlist.append([r_border,t_y])
                 corners[t_y][r_border]=7
-            else:
-                corners[t_y][r_border]=10
+            # else:
+            #     corners[t_y][r_border]=10
             r_border+=1
             if r_border>=width:
                 break
             c_color=img[t_y][r_border]  
             if n_x==-1 and t_y<height-1 and likecolor(objcolor,img[t_y+1][r_border]):
                 n_x=r_border
+        for xx in range(l_border-d, r_border+d):
+            if xx>=width:
+                break
+            if xx<0:
+                continue
+            if corners[t_y][xx] in [1,3,7] and not([xx,t_y] in cornerlist):
+                cornerlist.append([xx,t_y])  
+                corners[t_y][xx]=7
+            # else:
+            #     corners[t_y][xx]=10
         if n_x==-1:
             break
         l_border=n_x
         r_border=n_x
         t_y+=1
+    y=t_y+1
+    for t_y in range(y, y+d):
+        if t_y>=width-1:
+            break
+        for xx in range(l_border-d, r_border+d):
+            if xx>=width:
+                break
+            if xx<0:
+                continue
+            if corners[t_y][xx] in [1,3,7] and not([xx,t_y] in cornerlist):
+                cornerlist.append([xx,t_y])  
+                corners[t_y][xx]=7
+            # else:
+            #     corners[t_y][xx]=10
     return cornerlist
 
 
@@ -431,110 +531,162 @@ def corect_rect(coords):
         if not defind_side(coords[i][0],coords[i][1],coords[(i+1)%4][0],coords[(i+1)%4][1], coords[(i+2)%4][0],coords[(i+2)%4][1]):
             return False
     return True
-
+def SearchMaxWhite(r,grayscale,x,y):
+    if x < r:
+        dxDown = x
+    else:
+        dxDown = r
+    if len(grayscale[0])-x < r:
+        dxTop = len(grayscale[0])-x
+    else:
+        dxTop = r 
+    if y < r:
+        dyDown = y
+    else:
+        dyDown = r
+    if len(grayscale) - y < r:
+        dyTop = len(grayscale) - y
+    else:
+        dyTop = r
+    maximus = Grayscale[y - dyDown][x - dxDown]
+    maxCord = [x - dxDown,y - dyDown]
+    for y1 in range(y - dyDown,y + dyTop):
+        for x1 in range(x - dxDown,x + dxTop):
+            if Grayscale[y1][x1]> maximus:
+                maximus = Grayscale[y1][x1]
+                maxCord = [x1,y1]
+    return maxCord
 
 image_cnt,heigth,width = input().split(" ")
 heigth = int(heigth)
 width = int(width)
-ImageColor.getcolor('#FFFFFF', 'RGB') #Вернет (255, 255, 255)
-im = Image.new("RGB", (width, heigth))
-ImageMas = []
-for i in range(heigth):
-    ImageMas.append(str(input()).split(" "))
-Grayscale = []
-for i in range(len(ImageMas)):
-    Grayscale.append([])
-    for j in range(len(ImageMas[i])):
-        r = HexToTen(ImageMas[i][j][0:2])
-        g = HexToTen(ImageMas[i][j][2:4])
-        b = HexToTen(ImageMas[i][j][4:6])
+# ImageColor.getcolor('#FFFFFF', 'RGB') #Вернет (255, 255, 255)
+for q in range(int(image_cnt)):
+    im = Image.new("RGB", (width, heigth))
+    ImageMas = []
+    for i in range(heigth):
+        ImageMas.append(str(input()).split(" "))
+    Grayscale = []
+    for i in range(len(ImageMas)):
+        Grayscale.append([])
+        for j in range(len(ImageMas[i])):
+            r = HexToTen(ImageMas[i][j][0:2])
+            g = HexToTen(ImageMas[i][j][2:4])
+            b = HexToTen(ImageMas[i][j][4:6])
 
-        Grayscale[i].append(int(0.299 *r + 0.587 *g + 0.114 *b) )
+            Grayscale[i].append(int(0.299 *r + 0.587 *g + 0.114 *b) )
+    # if q!=0:
+    #     continue
 
-destiniton = 0
+    destiniton = 0
 
-for i in range(heigth):
-    for j in range(width):
-        color = '#'+hex(Grayscale[i][j])[2:]+hex(Grayscale[i][j])[2:]+hex(Grayscale[i][j])[2:]
-        im.putpixel((j, i), ImageColor.getcolor(color, 'RGB')) #Выполнит тоже самое
+    for i in range(heigth):
+        for j in range(width):
+            color = '#'+hex(Grayscale[i][j])[2:]+hex(Grayscale[i][j])[2:]+hex(Grayscale[i][j])[2:]
+            im.putpixel((j, i), ImageColor.getcolor(color, 'RGB')) #Выполнит тоже самое
 
-evual = 0.0
-max1 = 0.0
-rang = [-10,10]
-maxX = -1
-maxY = -1
-CoordinatesOld = []
-deсision = []
-#Coordinates = [[int(width/2 - width/10),int(heigth/2 - heigth/10)],[int(width/2 - width/10),int(heigth/2 + heigth/10)],[int(width/2 + width/10),int(heigth/2 + heigth/10)],[int(width/2 + width/10),int(heigth/2 - heigth/10)]]
-First = [[45,105],[55,105],[55,95],[45,95]]
-Coordinates = copyArray(First)
-# curMaxEst = findLocalMax()
+    evual = 0.0
+    max1 = 0.0
+    rang = [-10,10]
+    maxX = -1
+    maxY = -1
+    CoordinatesOld = []
+    deсision = []
+    #Coordinates = [[int(width/2 - width/10),int(heigth/2 - heigth/10)],[int(width/2 - width/10),int(heigth/2 + heigth/10)],[int(width/2 + width/10),int(heigth/2 + heigth/10)],[int(width/2 + width/10),int(heigth/2 - heigth/10)]]
+    First = [[45,105],[55,105],[55,95],[45,95]]
+    Coordinates = copyArray(First)
+    # curMaxEst = findLocalMax()
 
-# max1 = curMaxEst
-deсision =copyArray(Coordinates)
-#First = [[int(width/2),int(heigth/2)],[int(width/2 ),int(heigth/2)],[int(width/2),int(heigth/2)],[int(width/2),int(heigth/2)]]
-##[[10,0],[170,0],[170,230],[14,230]]
-""" for g in range(150):
-    for i in range(len(Coordinates)):
-        startX = Coordinates[i][0] 
-        startY = Coordinates[i][1]
+    # max1 = curMaxEst
+    deсision =copyArray(Coordinates)
+    #First = [[int(width/2),int(heigth/2)],[int(width/2 ),int(heigth/2)],[int(width/2),int(heigth/2)],[int(width/2),int(heigth/2)]]
+    ##[[10,0],[170,0],[170,230],[14,230]]
+    """ for g in range(150):
+        for i in range(len(Coordinates)):
+            startX = Coordinates[i][0] 
+            startY = Coordinates[i][1]
 
-        dopusk=17        
-        dx = random.randint(-dopusk,dopusk)
-        dy = random.randint(-dopusk,dopusk)        
-        Coordinates[i][0] += dx 
-        Coordinates[i][1] += dy
-        if not corect_rect(Coordinates):
-            Coordinates[i][0] = startX
-            Coordinates[i][1] = startY
-            continue
-        curMaxEst = findLocalMax()
-        if curMaxEst > max1:
-            max1 = curMaxEst
-            deсision =copyArray(Coordinates)
-            #showCoordinates(deсision, im)
-        else:
-            Coordinates[i][0] = startX
-            Coordinates[i][1] = startY """
+            dopusk=17        
+            dx = random.randint(-dopusk,dopusk)
+            dy = random.randint(-dopusk,dopusk)        
+            Coordinates[i][0] += dx 
+            Coordinates[i][1] += dy
+            if not corect_rect(Coordinates):
+                Coordinates[i][0] = startX
+                Coordinates[i][1] = startY
+                continue
+            curMaxEst = findLocalMax()
+            if curMaxEst > max1:
+                max1 = curMaxEst
+                deсision =copyArray(Coordinates)
+                #showCoordinates(deсision, im)
+            else:
+                Coordinates[i][0] = startX
+                Coordinates[i][1] = startY """
 
- #print(defind_side(10,10,15,12,14,12))
-
-
-image = np.array(Grayscale)
-masG = findCorners(image,width,heigth,8,0.04,1000000)
-cornerlist = sorted(masG, key=lambda k: k[2], reverse=True) 
-corners = []
-for i in range(heigth):
-    corners.append([])
-    for j in range(width):
-        corners[i].append(0)
-
-for j in range(0,190):
-    i = cornerlist[j]
-    corners[i[1]][i[0]] = 1
+    #print(defind_side(10,10,15,12,14,12))
 
 
-Coordinates = testRegion(10,200,corners)
-# for j in range(0,190):
-#     i = cornerlist[j]
-#     im.putpixel((i[0],i[1]),(255,255,0))
+    image = np.array(Grayscale)
+    masG = findCorners(image,width,heigth,8,0.04,1000000)
+    cornerlist = sorted(masG, key=lambda k: k[2], reverse=True) 
+    corners = []
+    for i in range(heigth):
+        corners.append([])
+        for j in range(width):
+            corners[i].append(0)
+
+    for j in range(0,len(corners)):
+        i = cornerlist[j]
+        corners[i[1]][i[0]] = 1
+    find_corner_center(corners)
+ 
+    #showCoordinates([], im)
+    ArrayCoord = []
+    # Coordinates = testRegion(111, 163,corners)
+    # ArrayCoord.append(Coordinates)
     
+    for i in range(heigth):
+        for j in range(width):
+            if corners[i][j] == 3:
+                curWhite = SearchMaxWhite(1,Grayscale,j,i)
 
-# for j in clist:
-#     im.putpixel((j[1],j[0]),ImageColor.getcolor('#992298', 'RGB'))
+                Coordinates = testRegion(curWhite[0],curWhite[1],corners)
+                ArrayCoord.append(Coordinates)
+                
+                # for i in range(heigth):
+                #     for j in range(width):
+                #         if corners[i][j]==20:
+                #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+                #         elif corners[i][j]==1:# Harris points
+                #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+                #         elif corners[i][j]==3:# Center of Harris points
+                #             im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
+                #         elif corners[i][j]==7: # Harris points in region
+                #             im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
+                # showCoordinates(Coordinates, im)
+    # for j in range(0,190):
+    #     i = cornerlist[j]
+    #     im.putpixel((i[0],i[1]),(255,255,0))
+        
 
-for i in range(heigth):
-    for j in range(width):
-        if corners[i][j]==20:
-            im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
-        elif corners[i][j]==1:# Harris points
-            im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
-        elif corners[i][j]==3:# Center of Harris points
-            im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
-        elif corners[i][j]==7: # Harris points in region
-            im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
-        # elif corners[i][j]==10: # region
-        #     im.putpixel((j, i), ImageColor.getcolor('#FF9800', 'RGB'))
-showCoordinates(Coordinates, im)
+    # for j in clist:
+    #     im.putpixel((j[1],j[0]),ImageColor.getcolor('#992298', 'RGB'))
+
+    for i in range(heigth):
+        for j in range(width):
+            if corners[i][j]==20:
+                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+            elif corners[i][j]==1:# Harris points
+                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+            elif corners[i][j]==3:# Center of Harris points
+                im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
+            elif corners[i][j]==7: # Harris points in region
+                im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
+            # elif corners[i][j]==10: # region
+            #     im.putpixel((j, i), ImageColor.getcolor('#FF9800', 'RGB'))
+    for i in ArrayCoord:
+        if len(i) != 0:
+            showCoordinates(i, im)
 
 print (max1)
