@@ -2,7 +2,12 @@ from PIL import ImageColor, Image
 import math
 from matplotlib.pyplot import *
 import random
+
 import numpy as np
+eps = 0.000001
+
+blackColor = 19
+
 dictionary = {
     "0":0,
     "1":1,
@@ -44,6 +49,7 @@ def compareRGB(r1,r2):
 
 
 def evaluation( x1=0, y1=0, x2=0, y2=0):
+    
     global im,Grayscale,width,heigth
     xV = x2 - x1
     yV = y2 - y1
@@ -121,31 +127,253 @@ def estimate(Coordinates):
         p2 = Coordinates[(i+1)%4]
         destiniton += evaluation(p1[0],p1[1],p2[0],p2[1])
     return destiniton/4
-def showCoordinates(Coordinates, img):
-    # global Segments
+def paralel(a1,a2):
+
+    if abs(a1 - a2)>0.523599:
+        return False
+    else:
+        return True
+def find_in_range(ar,value):
+    for i in ar:
+        if abs(i - value)<5:
+            return True
+    return False
+def dist_to_line(x,y,coefs):
+    if len(coefs)== 1:
+        return abs(coefs[0]-x)
+    a = coefs[0]
+    b = -1
+    c = coefs[1]
+    d = abs(a * x + b * y + c)/math.sqrt(a *a + b*b)
+    return d
+def showCoordinates():
+    global coefLines,heigth,width,minEdge, im, blackColor
     masx = []
     masy = []
+    mainL1 = 1000
+    mainL2 = 1000
     # for h in Segments:
     #     masx.append(h[0])
     #     masy.append(h[1])
     #     masx.append(h[2])
     #     masy.append(h[3])
-    for i in range(len(Coordinates)):
-        masx.append(Coordinates[i][0])
-        masy.append(Coordinates[i][1])
-    if len(Coordinates)>0:
-        masx.append(Coordinates[0][0])
-        masy.append(Coordinates[0][1])
+    # for i in range(len(Coordinates)):
+    #     masx.append(Coordinates[i][0])
+    #     masy.append(Coordinates[i][1])
+    # if len(Coordinates)>0:
+    #     masx.append(Coordinates[0][0])
+    #     masy.append(Coordinates[0][1])
+    Line1 = []
+    Line2 = []
+    angles=[]
+    for i in range(len(coefLines)):
+        cur = coefLines[i]
+
+        if len(cur)==1:
+            curAngle = 1.5708
+        else:
+            curAngle = math.atan(cur[0])
+        found=False
+        for a in angles:
+            if abs(a[0] - curAngle)< 0.2:
+                a[1]+=1
+                found=True
+                break
+        if not found:
+            mainL1 = curAngle
+            angles.append([curAngle,1])
+    if len(angles)<2:
+        return -1
+    angles = sorted(angles, key = lambda s:s[1])
+    mainL1=angles[0][0]
+    mainL2=angles[1][0]
 
     figure()
-    imshow(img)
-    plot(masx,masy,"r")
-    xlabel('x')
-    ylabel('y')
-    title('Example')
-    
-    show()        
+    imshow(im)
+    for i in range(len(coefLines)):
+        cur = coefLines[i]
+        
+        if len(cur) != 1:    
+            curb = cur[1]
+            curAngle = math.atan(cur[0])
+           
+            if abs(cur[0])<eps:
+                y1 = cur[1]
+                y2 = y1
+                x1 = 0
+                x2= width
+            elif abs(cur[0]) < 1:
+                x1 = 0
+                x2 = width
+                y1 =  cur[1]
+                y2 = cur[0]*width+cur[1]
+            else:
+                x1 = (0-cur[1])/cur[0]
+                x2 = (heigth-cur[1])/cur[0]
+                y1 = 0
+                y2 = heigth
+            
+        else:
+            curAngle = 1.5708
+            x1 = cur[0]
+            x2 = x1
+            y1 = 0
+            y2 = heigth
+        bias = minEdge/2
+        flag = True  
+        if paralel(curAngle,mainL1):
+            for h in range(len(Line1)):
+                if dist_to_line(x1,y1,Line1[h])<bias:
+                    flag = False
+                    break
+            if flag:                
+                Line1.append(cur)
+                plot([x1,x2],[y1,y2],"g")
+        else:
+            for h in range(len(Line2)):
+                if dist_to_line(x1,y1,Line2[h])<bias:
+                    flag = False
+                    break
+            if flag:
+                Line2.append(cur)
+                plot([x1,x2],[y1,y2],"b")
+    if len(Line1)<4:
+        for i in range(len(Line1)):
+            if len(Line1[i]) == 1 :
+                x = Line1[i][0] 
+                # sortline1.append([x, Line1[i]])
 
+
+
+    sortline1=[]
+    for i in range(len(Line1)):
+        if abs(mainL1) > 0.7:
+            if len(Line1[i]) == 1 :
+                x = Line1[i][0] 
+                sortline1.append([x, Line1[i]])
+            else:
+                x = (0-Line1[i][1])/Line1[i][0]
+        else:
+                x = Line1[i][1]
+        sortline1.append([x, Line1[i]])
+    sortline1 = sorted(sortline1,key = lambda s: s[0])
+
+    sortline2=[]
+    for i in range(len(Line2)):
+        if abs(mainL2) > 0.7:
+            if len(Line2[i]) == 1 :
+                x = Line2[i][0] 
+                sortline2.append([x, Line2[i]])
+            else:
+                x = (0-Line2[i][1])/Line2[i][0]
+        else:
+                x = Line2[i][1]
+        sortline2.append([x, Line2[i]])
+    sortline2 = sorted(sortline2,key = lambda s: s[0])
+    # if len(sortline1) != 4:
+        
+    #     i = 0
+    #     j = 0
+    #     x1 = (sortline2[j][1][1] - sortline1[i][1][1] )/(sortline1[i][1][0] - sortline2[j][1][0] )
+    #     y1 = x1 * sortline1[i][1][0] + sortline1[i][1][1]
+    #     j = len(sortline2)-1
+    #     x2 = (sortline2[j][1][1] - sortline1[i][1][1] )/(sortline1[i][1][0] - sortline2[j][1][0] )
+    #     y2 = x2 * sortline1[i][1][0] + sortline1[i][1][1]        
+    #     if x1 > x2:
+    #         tmpx =  x2
+    #         x2 = x1
+    #         x1 = tmpx
+    #         tmpy = y2
+    #         y2 = y1
+    #         y1 = tmpy
+    #     if abs(mainL1 )< 0.7:
+    #         while x1 > 0:
+    #             x1 = x1 - 1
+    #             y1 = x1 * sortline1[0][1][0] + sortline1[0][1][1]
+    #             if likecolor(Grayscale[y1][x1],blackColor):
+    #                 continue
+    #             else:
+    #                 k = sortline2[0][1][0]
+    #                 b = y1 - k * x1
+    #                 sortline2.append([x1,[k,b]])
+    #                 break
+    #         while x2 < width:
+    #             x2 = x2 + 1
+    #             y2 = x2 * sortline1[0][1][0] + sortline1[0][1][1]
+    #             if likecolor(Grayscale[y2][x2],blackColor):
+    #                 continue
+    #             else:
+    #                 k = sortline2[0][1][0]
+    #                 b = y1 - k * x2
+    #                 sortline2.append([x2,[k,b]])
+    #                 break
+    matrix = [[1,1,1],[1,1,1],[1,1,1]] 
+    # 1 is black
+    
+    for i in range(len(sortline1)-1):
+        for j in range(len(sortline2)-1):
+            if len(sortline1[i][1]) != 1 and len(sortline2[j][1]) != 1:
+                x1 = (sortline2[j][1][1] - sortline1[i][1][1] )/(sortline1[i][1][0] - sortline2[j][1][0] )
+                y1 = x1 * sortline1[i][1][0] + sortline1[i][1][1]
+                x2 = (sortline2[j+1][1][1] - sortline1[i+1][1][1] )/(sortline1[i+1][1][0] - sortline2[j+1][1][0] )
+                y2 = x2 * sortline1[i+1][1][0] + sortline1[i+1][1][1]
+                x= int((x1 + x2 )/ 2)
+                y = int((y1 + y2)/2)
+                # if not(likecolor(getColorR(x,y), blackColor)):
+                #     matrix[i][j] = 0
+
+    # xlabel('x')
+    # ylabel('y')
+    # title('Example')
+    sum1 = matrix[0][0] + matrix[0][2] + matrix[2][0]+ matrix[2][2]
+    show()
+    if sum1 != 3:
+        return -1
+    else:
+        for i in range(3):
+            if matrix[2][2] == 0:
+                break
+                 
+            else:
+                matrix = rotate(matrix)
+
+        return(readMatrix(matrix)) 
+def readMatrix(m):
+    s = m[0][1] * 8 + m[1][0]*4+ m[1][2]*2 + m[2][1]
+    return s
+def move(m):
+    m1 = [[1,1,1],[1,1,1],[1,1,1]]
+    
+    s = m[2][2]+ m[1][2]+m[0][2]
+    if s == 3:
+        for i in range(len(m)):
+            for j in range(len(m[i])):
+                m1[i][(j+1)%3] = m[i][j]
+        m = m1
+    s = m[2][0]+ m[2][1]+m[2][2]
+    if s == 3:
+        for i in range(len(m)):
+            for j in range(len(m[i])):
+                m1[(i+1)%3][j]= m[i][j]
+        m = m1
+
+
+    return m
+def rotate(m):
+    m1 = [[0,0,0],[0,0,0],[0,0,0]]
+    for i in range(len(m)):
+        for j in range(len(m)):
+            m1[j][2 - i] = m[i][j]
+    return m1
+def printMatrix(m):
+    for i in m:
+        for j in i:
+            print(j,end = " ")
+        print("")
+    print("",end = "\n")
+def getColorR(x,y):
+    global Grayscale
+    return Grayscale[y][x]
 # # im.putpixel((0, 0), (255, 255, 255)) #Окрасит точку (0, 0) в цвет (255, 255, 255)
 # # im.putpixel((0, 0), ImageColor.getcolor('#FFFFFF', 'RGB')) #Выполнит тоже самое
 def findLocalMax():
@@ -195,7 +423,29 @@ def findLocalMax():
                 Coordinates[i][1] = startY
                 Coordinates[i][0] = startX
     return max1
-def testRegion(x,y,corners):
+def appendLine(x1,y1,x2,y2):
+    global coefLines,eps,minEdge
+    dist =  math.sqrt((x1 - x2)*(x1 - x2) + (y1-y2)* (y1-y2))
+    if dist < minEdge:
+        minEdge = dist
+    if abs(x1 - x2)<eps and abs:
+        coefLines.append([x1])
+    else:
+        linek =  (y1 - y2)/(x1-x2)
+        lineb = y1 - linek * x1
+        coefLines.append([linek,lineb])
+def appendBorder(x1,y1,x2,y2):
+    global borders,eps,minEdge
+    dist =  math.sqrt((x1 - x2)*(x1 - x2) + (y1-y2)* (y1-y2))
+    if dist < minEdge:
+        minEdge = dist
+    if abs(x1 - x2)<eps and abs:
+        borders.append([x1])
+    else:
+        linek =  (y1 - y2)/(x1-x2)
+        lineb = y1 - linek * x1
+        borders.append([linek,lineb])
+def testRegion2(x,y,corners):
     Segments = []
     masCen=[]
     masCen=searchCorners(x,y, Grayscale,  width, heigth, corners)
@@ -211,22 +461,28 @@ def testRegion(x,y,corners):
     #         elif corners[i][j]==7: # Harris points in region
     #             im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
     # showCoordinates([], im)
-
-
+    
+    maxK = 1000000
     for i in range(len(masCen)):
         for j in range(i+1,len(masCen)):
-            e = evaluation(masCen[i][0],masCen[i][1],masCen[j][0],masCen[j][1])
+            x1 = masCen[i][0]
+            y1 = masCen[i][1]
+            x2 = masCen[j][0]
+            y2 = masCen[j][1]
+            if find_dist(x1,y1,x2,y2)<10:
+                continue
+            e = evaluation(x1,y1,x2,y2)
             if e > 0.6:
-                Segments.append([masCen[i][0],masCen[i][1],masCen[j][0],masCen[j][1]])
+                Segments.append([x1,y1,x2,y2])
                 masCen[i].append(j)
                 masCen[j].append(i)
-
             else:
-                e = evaluation(masCen[j][0],masCen[j][1],masCen[i][0],masCen[i][1])    
+                e = evaluation(x2,y2,x1,y1)    
                 if e> 0.6:
-                    Segments.append([masCen[j][0],masCen[j][1],masCen[i][0],masCen[i][1]])
+                    Segments.append([x2,y2,x1,y1])
                     masCen[i].append(j)        
                     masCen[j].append(i)
+
     masCen2=[]
     for i in range(len(masCen)):
         if len(masCen[i])>= 4:
@@ -257,6 +513,7 @@ def testRegion(x,y,corners):
         return []
     while cur_p!=-1:
         Coordinates.append([masCen2[cur_p][0],masCen2[cur_p][1]])
+     
         tmp=cur_p
         if len(masCen2[cur_p])!=5:
             return []
@@ -267,7 +524,167 @@ def testRegion(x,y,corners):
         prev_p=tmp
         if cur_p == first:
             break
+    leng = len(Coordinates)
+    for i in range(leng):
+        x1 = Coordinates[i][0]
+        y1 = Coordinates[i][1]
+
+        y2 = Coordinates[(i+1)%leng][1]
+        x2 = Coordinates[(i+1)%leng][0]
+
+        appendLine(x1,y1,x2,y2)
     return Coordinates
+
+
+def testRegion(masCen):    
+    # masCen=[]
+    # masCen=searchCorners(x,y, Grayscale,  width, heigth, corners)
+
+    # for i in range(heigth):
+    #     for j in range(width):
+    #         if corners[i][j]==1:
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FFFF', 'RGB'))
+    #         elif corners[i][j]==1:# Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+    #         elif corners[i][j]==3:# Center of Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
+    #         elif corners[i][j]==7: # Harris points in region
+    #             im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
+    # showCoordinates([], im)
+    global im, blackColor, Grayscale
+    figure()
+    imshow(im)
+    for i in range(len(masCen)):
+        x0 = masCen[i][0]
+        y0 = masCen[i][1]        
+        for j in range(i+1,len(masCen)):
+            x1 = masCen[j][0]
+            y1 = masCen[j][1]
+            d=find_dist(x0,y0,x1,y1)
+            if d<10:
+                continue
+            par_index=-1
+            d2=10000000
+            for n in range(2,len(masCen[i])):
+                pr=masCen[i][n]
+                x2 = masCen[pr][0]
+                y2 = masCen[pr][1]
+                d2=find_dist(x0,y0,x2,y2)
+                ax=x1 - x0
+                ay=y1 - y0
+                bx=x2 - x0
+                by=y2 - y0
+                l = math.atan((ax * by - ay*bx) / (ax*bx + ay*by))
+                if abs(l)<0.2:
+                    par_index=pr
+
+            if par_index!=-1 and d<d2:
+                continue
+
+            e = evaluation(x0,y0,x1,y1)
+            if e > 0.7:
+                if par_index==-1:
+                    # Segments.append([x0,y0,x1,y1])
+                    masCen[i].append(j)                    
+                elif par_index!=-1 and d>d2:                    
+                    masCen[i].remove(par_index)
+                    masCen[i].append(j)
+       
+    left=masCen[0][0]
+    right=masCen[i][0]
+    top=masCen[i][1]
+    bottom=masCen[i][1]
+    linepnts=[]
+    for i in range(len(masCen)):
+        x0 = masCen[i][0]
+        y0 = masCen[i][1]
+        if left>x0:
+            left=x0
+        if right<x0:
+            right=x0
+        if top<y0:
+            top=y0
+        if bottom>y0:
+            bottom=y0            
+        # if len(masCen[i])==4:
+        for n in range(2,len(masCen[i])):
+            x1 = masCen[masCen[i][n]][0]
+            y1 = masCen[masCen[i][n]][1]                
+            if [x0,y0,x1,y1] not in linepnts and [x1,y1,x0,y0] not in linepnts:
+                linepnts.append([x0,y0,x1,y1])
+                appendLine(x0,y0,x1,y1)
+                plot([x1,x0],[y1,y0],"g")
+    
+    # searching borders
+    y=int((top + bottom) / 2)
+    y1 = y + 5    
+    x1=-1
+    for x in range(right+5, width):
+        if not likecolor(blackColor, Grayscale[y1][x]):
+            x1 = x
+            break
+    y2 = y - 5
+    x2=-1
+    for x in range(right+5, width):
+        if not likecolor(blackColor, Grayscale[y2][x]):
+            x2 = x
+            break
+    
+    if x1!=-1 and x2!=-1:
+        appendBorder(x2,y2,x1,y1)
+        plot([x1,x2],[y1,y2],"r")
+    x1=-1
+    for x in range(left-5, 0,-1):
+        if not likecolor(blackColor, Grayscale[y1][x]):
+            x1 = x
+            break
+    x2=-1
+    for x in range(left-5, 0,-1):
+        if not likecolor(blackColor, Grayscale[y2][x]):
+            x2 = x
+            break
+    
+    if x1!=-1 and x2!=-1:
+        appendBorder(x2,y2,x1,y1)
+        plot([x1,x2],[y1,y2],"r")
+    
+
+    x=int((left + right) / 2)
+    x1 = y + 5    
+    y1=-1
+    for y in range(top+5, heigth):
+        if not likecolor(blackColor, Grayscale[y][x1]):
+            y1 = y
+            break
+    x2 = x - 5
+    y2=-1
+    for y in range(top+5, heigth):
+        if not likecolor(blackColor, Grayscale[y][x2]):
+            y2 = y
+            break
+    
+    if y1!=-1 and y2!=-1:
+        appendBorder(x2,y2,x1,y1)
+        plot([x1,x2],[y1,y2],"b")
+    y1=-1
+    for y in range(bottom-5, 0,-1):
+        if not likecolor(blackColor, Grayscale[y][x1]):
+            y1 = y
+            break
+    y2=-1
+    for y in range(left-5, 0,-1):
+        if not likecolor(blackColor, Grayscale[y][x2]):
+            y2 = y
+            break
+    
+    if y1!=-1 and y2!=-1:
+        appendBorder(x2,y2,x1,y1)
+        plot([x1,x2],[y1,y2],"b")
+
+
+    
+    show()
+    
     
 def find_dist(x1,y1,x2,y2):
     return math.sqrt((x2 - x1)*(x2-x1) + (y2 - y1)*(y2-y1))
@@ -560,30 +977,37 @@ def SearchMaxWhite(r,grayscale,x,y):
 image_cnt,heigth,width = input().split(" ")
 heigth = int(heigth)
 width = int(width)
+Grayscales = []
+fla = True
 # ImageColor.getcolor('#FFFFFF', 'RGB') #Вернет (255, 255, 255)
 for q in range(int(image_cnt)):
-    im = Image.new("RGB", (width, heigth))
+    # im = Image.new("RGB", (width, heigth))
+    coefLines = []
+    borders = []
+    minEdge = heigth
     ImageMas = []
+ 
+    Grayscales.append([])
     for i in range(heigth):
-        ImageMas.append(str(input()).split(" "))
-    Grayscale = []
-    for i in range(len(ImageMas)):
-        Grayscale.append([])
-        for j in range(len(ImageMas[i])):
+        Grayscales[q].append([])
+        ImageMas.append(input().split(" "))
+
+        for j in range(width):
             r = HexToTen(ImageMas[i][j][0:2])
             g = HexToTen(ImageMas[i][j][2:4])
             b = HexToTen(ImageMas[i][j][4:6])
 
-            Grayscale[i].append(int(0.299 *r + 0.587 *g + 0.114 *b) )
-    # if q!=0:
-    #     continue
-
+            Grayscales[q][i].append(int(0.299 *r + 0.587 *g + 0.114 *b) )
+for q in range(int(image_cnt)):    
+    coefLines = []
+    minEdge = heigth
+    ImageMas = []
+    Grayscale = Grayscales[q]
+ 
+    
     destiniton = 0
 
-    for i in range(heigth):
-        for j in range(width):
-            color = '#'+hex(Grayscale[i][j])[2:]+hex(Grayscale[i][j])[2:]+hex(Grayscale[i][j])[2:]
-            im.putpixel((j, i), ImageColor.getcolor(color, 'RGB')) #Выполнит тоже самое
+
 
     evual = 0.0
     max1 = 0.0
@@ -593,12 +1017,12 @@ for q in range(int(image_cnt)):
     CoordinatesOld = []
     deсision = []
     #Coordinates = [[int(width/2 - width/10),int(heigth/2 - heigth/10)],[int(width/2 - width/10),int(heigth/2 + heigth/10)],[int(width/2 + width/10),int(heigth/2 + heigth/10)],[int(width/2 + width/10),int(heigth/2 - heigth/10)]]
-    First = [[45,105],[55,105],[55,95],[45,95]]
-    Coordinates = copyArray(First)
-    # curMaxEst = findLocalMax()
+    # First = [[45,105],[55,105],[55,95],[45,95]]
+    # Coordinates = copyArray(First)
+    # # curMaxEst = findLocalMax()
 
-    # max1 = curMaxEst
-    deсision =copyArray(Coordinates)
+    # # max1 = curMaxEst
+    # deсision =copyArray(Coordinates)
     #First = [[int(width/2),int(heigth/2)],[int(width/2 ),int(heigth/2)],[int(width/2),int(heigth/2)],[int(width/2),int(heigth/2)]]
     ##[[10,0],[170,0],[170,230],[14,230]]
     """ for g in range(150):
@@ -628,7 +1052,7 @@ for q in range(int(image_cnt)):
 
 
     image = np.array(Grayscale)
-    masG = findCorners(image,width,heigth,8,0.04,1000000)
+    masG = findCorners(image,width,heigth,8,0.05,100000)
     cornerlist = sorted(masG, key=lambda k: k[2], reverse=True) 
     corners = []
     for i in range(heigth):
@@ -639,20 +1063,39 @@ for q in range(int(image_cnt)):
     for j in range(0,len(corners)):
         i = cornerlist[j]
         corners[i[1]][i[0]] = 1
-    find_corner_center(corners)
- 
+    clist=find_corner_center(corners)
+
+
+    im = Image.new("RGB", (width, heigth))
+
+    for i in range(heigth):
+        for j in range(width):
+            if corners[i][j]==20:
+                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+            elif corners[i][j]==1:# Harris points
+                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+            elif corners[i][j]==3:# Center of Harris points
+                im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
+            elif corners[i][j]==7: # Harris points in region
+                im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
+            else:
+                im.putpixel((j, i), (Grayscale[i][j], Grayscale[i][j],Grayscale[i][j]))
+    # figure()
+    # imshow(im)
+    # show()
+    # continue
     #showCoordinates([], im)
     ArrayCoord = []
     # Coordinates = testRegion(111, 163,corners)
     # ArrayCoord.append(Coordinates)
-    
-    for i in range(heigth):
-        for j in range(width):
-            if corners[i][j] == 3:
-                curWhite = SearchMaxWhite(1,Grayscale,j,i)
+    testRegion( clist)
+    # for i in range(heigth):
+    #     for j in range(width):
+    #         if corners[i][j] == 3:
+    #             curWhite = SearchMaxWhite(1,Grayscale,j,i)
 
-                Coordinates = testRegion(curWhite[0],curWhite[1],corners)
-                ArrayCoord.append(Coordinates)
+    #             testRegion(curWhite[0],curWhite[1],corners)
+                #ArrayCoord.append(Coordinates)
                 
                 # for i in range(heigth):
                 #     for j in range(width):
@@ -672,21 +1115,28 @@ for q in range(int(image_cnt)):
 
     # for j in clist:
     #     im.putpixel((j[1],j[0]),ImageColor.getcolor('#992298', 'RGB'))
+    # for i in range(heigth):
+    #     for j in range(width):
+    #         if corners[i][j]==20:
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+    #         elif corners[i][j]==1:# Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+    #         elif corners[i][j]==3:# Center of Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
+    #         elif corners[i][j]==7: # Harris points in region
+    #             im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
+    #         # elif corners[i][j]==10: # region
+    #         #     im.putpixel((j, i), ImageColor.getcolor('#FF9800', 'RGB'))\
+   
 
-    for i in range(heigth):
-        for j in range(width):
-            if corners[i][j]==20:
-                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
-            elif corners[i][j]==1:# Harris points
-                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
-            elif corners[i][j]==3:# Center of Harris points
-                im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
-            elif corners[i][j]==7: # Harris points in region
-                im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
-            # elif corners[i][j]==10: # region
-            #     im.putpixel((j, i), ImageColor.getcolor('#FF9800', 'RGB'))
-    for i in ArrayCoord:
-        if len(i) != 0:
-            showCoordinates(i, im)
+    res1 = showCoordinates()
+    if res1 != -1:
+        fla = False
+        print(int(res1))
+        break
+    if not(fla):
+        break
+if fla:
+    print (-1)
 
-print (max1)
+    
