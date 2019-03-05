@@ -192,7 +192,7 @@ function evaluation(x1,y1,x2,y2,img)
         yW2 = y + yV2
         if (xW>= 0 && xW<width && yW>=0 && yW<height && xW2 >= 0 && xW2 <width && yW2 >= 0 && yW2<height)
         {
-            if (Math.abs(img[yW][xW]-img[yW2][xW2])<threshold)
+            if (Math.abs(img[yW][xW]-img[yW2][xW2]>100))
             {
                 cnt++;
             }
