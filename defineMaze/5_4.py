@@ -1,6 +1,6 @@
-from PIL import ImageColor, Image
+# from PIL import ImageColor, Image
 import math
-from matplotlib.pyplot import *
+# from matplotlib.pyplot import *
 def direct_change(mainD,sensD):
     if mainD == "L":
         if sensD == "R":
@@ -98,35 +98,35 @@ def changeDir(maind,curd):
             return  "R"
         if curd == "R":
             return  "L"
-def drawMAZE(x,y):
-    global maze,im
-    rad =30
-    if maze[y][x]["L"] == 0:
-        for i in range(y*rad,y*rad + rad):
-            im.putpixel((x*rad, i), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое
-    if maze[y][x]["R"] == 0:
-        for i in range(y*rad,y*rad + rad):
-            im.putpixel((x*rad+rad, i), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое    
-    if maze[y][x]["U"] == 0:
-        for i in range(x*rad,x*rad + rad):
-            im.putpixel((i, y*rad), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое
-    if maze[y][x]["D"] == 0:
-        for i in range(x*rad,x*rad + rad):
-            im.putpixel((i, y*rad + rad), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое
+# def drawMAZE(x,y):
+#     global maze,im
+#     rad =30
+#     if maze[y][x]["L"] == 0:
+#         for i in range(y*rad,y*rad + rad):
+#             im.putpixel((x*rad, i), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое
+#     if maze[y][x]["R"] == 0:
+#         for i in range(y*rad,y*rad + rad):
+#             im.putpixel((x*rad+rad, i), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое    
+#     if maze[y][x]["U"] == 0:
+#         for i in range(x*rad,x*rad + rad):
+#             im.putpixel((i, y*rad), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое
+#     if maze[y][x]["D"] == 0:
+#         for i in range(x*rad,x*rad + rad):
+#             im.putpixel((i, y*rad + rad), ImageColor.getcolor("#"+"00FF00", 'RGB')) #Выполнит тоже самое
 
 
-    if maze[y][x]["L"] == 1:
-        for i in range(y*rad,y*rad + rad):
-            im.putpixel((x*rad, i), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
-    if maze[y][x]["R"] == 1:
-        for i in range(y*rad,y*rad + rad):
-            im.putpixel((x*rad+rad, i), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое    
-    if maze[y][x]["U"] == 1:
-        for i in range(x*rad,x*rad + rad):
-            im.putpixel((i, y*rad), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
-    if maze[y][x]["D"] == 1:
-        for i in range(x*rad,x*rad + rad):
-            im.putpixel((i, y*rad + rad), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
+#     if maze[y][x]["L"] == 1:
+#         for i in range(y*rad,y*rad + rad):
+#             im.putpixel((x*rad, i), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
+#     if maze[y][x]["R"] == 1:
+#         for i in range(y*rad,y*rad + rad):
+#             im.putpixel((x*rad+rad, i), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое    
+#     if maze[y][x]["U"] == 1:
+#         for i in range(x*rad,x*rad + rad):
+#             im.putpixel((i, y*rad), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
+#     if maze[y][x]["D"] == 1:
+#         for i in range(x*rad,x*rad + rad):
+#             im.putpixel((i, y*rad + rad), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
 
 inp = input().split(" ")
 numOfRob = int(inp[0])
@@ -134,7 +134,7 @@ width = int(inp[1])
 height = int(inp[2])
 cnt_tests = int(inp[3])
 robots = []
-im = Image.new("RGB", (width*30+1,height*30+1))
+# im = Image.new("RGB", (width*30+1,height*30+1))
 
 for i in range(numOfRob):
     
@@ -184,10 +184,10 @@ for j in range(width):
 
         
     
-for i in range(height*30+1):
-    for j in range(width*30 + 1):
+# for i in range(height*30+1):
+#     for j in range(width*30 + 1):
 
-        im.putpixel((j, i), ImageColor.getcolor("#"+"FFFFFF", 'RGB')) #Выполнит тоже самое
+#         im.putpixel((j, i), ImageColor.getcolor("#"+"FFFFFF", 'RGB')) #Выполнит тоже самое
 dcnt = 0
 for i in range(numOfRob):
     for j in range(cnt_tests):
@@ -229,14 +229,14 @@ for i in range(numOfRob):
 
         
 
-for i in range(height):
-    for j in range(width):
+# for i in range(height):
+#     for j in range(width):
 
-        drawMAZE(j,i)
-im.putpixel((90,100), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
-figure()
-imshow(im)
-show()    
+#         drawMAZE(j,i)
+# # im.putpixel((90,100), ImageColor.getcolor("#"+"FF0000", 'RGB')) #Выполнит тоже самое
+# figure()
+# imshow(im)
+# show()    
 cnt = 0
 
 prizoners = []
@@ -277,7 +277,7 @@ while len(curmas)!= 0:
                 prizoners.remove([xc,yc+1])     
             curmas.append([xc,yc+1])
    
-        elif maze[yc][xc]["D"] == 0 and yc<len(maze)-1 and not([xc,yc+1] in was):
+        elif maze[yc][xc]["D"] == 5 and yc<len(maze)-1 and not([xc,yc+1] in was):
             prizoners.append([xc,yc+1])
                     # if [3,1] in curmas:
         #     print(cur)

@@ -1,35 +1,25 @@
-from matplotlib.pyplot import *
-from PIL import ImageColor, Image
+# from matplotlib.pyplot import *
+# from PIL import ImageColor, Image
 import math
+
+import sys
+
 dx = 0.0
 dy = 0.0
 
 def searchPoint(x,y,data1,data2,s=1):
+    global width,height
     cur = data1[y][x]
     matrix = [[0,0,0],[0,0,0],[0,0,0]]
-    if y == 0:
-        downY = 0
-        upY = y + s
-    elif y == len(data1)-s:
-        upY = len(data1) - 1
-        downY = y - s
-    else:
-        downY = y - s
-        upY = y + s        
-    if x == 0:
-        lx = 0
-        rx = x + s
-    elif x == len(data1[0])-s:
-        lx = x - s
-        rx = len(data1[0]-1)   
-    else:
-        lx = x - s 
-        rx = x + s       
-    i1 = 0
-    j1 = 0
-    for i in range(downY,upY+1):
-        for j in range(lx,rx+1):
-            matrix[i-downY][j - lx] = data1[i][j]
+
+
+    for i in range(0,3):
+        for j in range(0,3):
+            vx=x+j-1
+            vy=y+i-1
+            if vx<0 or vx>=width or vy<0 or vy>=height:
+                continue
+            matrix[i][j] = data1[vy][vx]
  
     for i in range(len(data2)):
         for j in range(len(data2[0])):
@@ -46,47 +36,34 @@ def searchPoint(x,y,data1,data2,s=1):
 def rotate(m):
     m1 = [[0,0,0],[0,0,0],[0,0,0]]
     for i in range(len(m)):
-        for j in range(len(m)):
+        for j in range(len(m[0])):
             m1[j][2 - i] = m[i][j]
     return m1
+def compareMatrix(m1,m2):
+    for i in range(len(m1)):
+        for j in range(len(m1)):
+            if m1[i][j] != -1 and m2[i][j]!=-1 and m2[i][j] != m1[i][j]:
+                return False
+    return True
 def check_matrix(x1,y1,data2,matrix):
-    # cnt=0
-    # for j in range(0,len(matrix)):
-    #     for i in range(0,len(matrix[j])):
-    #         if matrix[j][i]==data2[x1+j-1][i+y1-1]:
-    #             cnt++
+
     flag= True
     s = 1
-    matrix1 = [[0,0,0],[0,0,0],[0,0,0]]
-    if y1 == 0:
-        downY1 = 0
-        upY1 = y1 + s
-    elif y1 == len(data2)-s:
-        upY1 = len(data2) - 1
-        downY1 = y1 - s
-    else:
-        upY1 = y1 + s
-        downY1 = y1 - s
-
-    if x1 == 0:
-        lx1 = 0
-        rx1 = x1 + s
-    elif x1 == len(data2[0])-s:
-        lx1 = x1 - s
-        rx1 = len(data2[0]-1)   
-    else:
-        rx1 = x1 + s
-        lx1 = x1 - s
+    matrix1 = [[-1,-1,-1],[-1,-1,-1],[-1,-1,-1]]
 
 
-    for i in range(downY1,upY1+1):
-        for j in range(lx1,rx1+1):
-            matrix1[i-downY1][j-lx1] = data2[i][j]
+    for i in range(0,3):
+        for j in range(0,3):
+            vx=x1+j-1
+            vy=y1+i-1
+            if vx<0 or vx>=width or vy<0 or vy>=height:
+                continue
+            matrix1[i][j] = data2[vy][vx]
     # x = int((lx1 + rx1)/2)
     # y= int((upY1 + downY1)/2)
     for i in range(4):
 
-        if matrix == matrix1:
+        if compareMatrix(matrix,matrix1):
             return True
         else:
             matrix1 = rotate(matrix1)
@@ -99,6 +76,7 @@ height = int(inp[3])
 width = int(inp[4])
 data = []
 
+   
 lines = []
 for c in range(n):
     data.append([])
@@ -109,17 +87,17 @@ for c in range(n):
         line.append([])
         for j in range(width):
             line[i].append(data[c][i*width+j])
-    im = Image.new("RGB", (width, height))
+    # im = Image.new("RGB", (width, height))
     lines.append(line)
-    for i in range(height):
-        for j in range(width):
-            im.putpixel((j, i),ImageColor.getcolor("#"+line[i][j], 'RGB')) #Выполнит тоже самое
+    # for i in range(height):
+    #     for j in range(width):
+    #         im.putpixel((j, i),ImageColor.getcolor("#"+line[i][j], 'RGB')) #Выполнит тоже самое
 
-    figure()
-    imshow(im)
+    # figure()
+    # imshow(im)
 
 
-    show()
+    # show()
 def adCoord(x1,y1,x2,y2):
     global dx,dy,a,h
     difx = x2 - x1
@@ -134,19 +112,24 @@ def adCoord(x1,y1,x2,y2):
     dx += lpx * x
     dy += lpy * y
 
-# cenx = int(width/2)
-# ceny = int(height/2)
-masp = [[1,2],[1,1],[1,width-2],[height-2,1],[height-2,width-2]]
+cenx = int(width/2)
+ceny = int(height/2)
+masp = [[int(height/2),int(width/2)],[1,2],[1,1],[1,width-2],[height-2,1],[height-2,width-2]]
 cd = True
+f = False
+if height >0 and width >0:
+# masp = [[[int(height/2,int(width/2))]]
+    for i in range(n-1):
+        for d1 in masp:
 
-for i in range(n-1):
-    for h1 in masp:
-        res = searchPoint(h1[1],h1[0],lines[i],lines[i+1])
-        if res[0]:
-            adCoord(h1[1],h1[0],res[1],res[2])
-            break
-        else:
-            continue
+            cenx = d1[0]
+            ceny = d1[1]
+            res = searchPoint(cenx,ceny,lines[i],lines[i+1])
+            if res[0]:
+                adCoord(cenx,ceny,res[1],res[2])
+                break
+    
+    
 
 if cd:
     # x = -dx 
@@ -156,5 +139,8 @@ if cd:
     # lpy = l / height
     # print(round(lpx * x,1),round(lpy * y,1))
     print(round(dx,1),round(dy,1))
+    # print(dx,dy)
+else:
+    print(0.0,0.0)
 # print(cenx,ceny)
 # print(res[1],res[2])

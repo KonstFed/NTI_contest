@@ -1,6 +1,6 @@
-from PIL import ImageColor, Image
+# from PIL import ImageColor, Image
 import math
-from matplotlib.pyplot import *
+# from matplotlib.pyplot import *
 import random
 
 import numpy as np
@@ -146,6 +146,20 @@ def dist_to_line(x,y,coefs):
     c = coefs[1]
     d = abs(a * x + b * y + c)/math.sqrt(a *a + b*b)
     return d
+def distlines(line1,line2):
+    if len(line1) == 1 and len(line2) > 1:
+        x = line1[i][0]
+        y =0
+        return dist_to_line(x,y,line2)
+    if len(line1) > 1 and len(line2) == 1:
+        x = line2[i][0]
+        y =0
+        return dist_to_line(x,y,line1)
+    if len(line1) == 1 and len(line2) == 1:        
+        return abs(line1[i][0]-line2[i][0])
+    x = 0
+    y = line2[0]*x + line2[1]
+    return dist_to_line(x,y,line2)
 def showCoordinates():
     global coefLines,heigth,width,minEdge, im, blackColor
     masx = []
@@ -188,8 +202,8 @@ def showCoordinates():
     mainL1=angles[0][0]
     mainL2=angles[1][0]
 
-    figure()
-    imshow(im)
+    # figure()
+    # imshow(im)
     for i in range(len(coefLines)):
         cur = coefLines[i]
         
@@ -228,7 +242,7 @@ def showCoordinates():
                     break
             if flag:                
                 Line1.append(cur)
-                plot([x1,x2],[y1,y2],"g")
+                # plot([x1,x2],[y1,y2],"g")
         else:
             for h in range(len(Line2)):
                 if dist_to_line(x1,y1,Line2[h])<bias:
@@ -236,13 +250,7 @@ def showCoordinates():
                     break
             if flag:
                 Line2.append(cur)
-                plot([x1,x2],[y1,y2],"b")
-    if len(Line1)<4:
-        for i in range(len(Line1)):
-            if len(Line1[i]) == 1 :
-                x = Line1[i][0] 
-                # sortline1.append([x, Line1[i]])
-
+                # plot([x1,x2],[y1,y2],"b")
 
 
     sortline1=[]
@@ -250,14 +258,43 @@ def showCoordinates():
         if abs(mainL1) > 0.7:
             if len(Line1[i]) == 1 :
                 x = Line1[i][0] 
-                sortline1.append([x, Line1[i]])
+                #sortline1.append([x, Line1[i]])
             else:
                 x = (0-Line1[i][1])/Line1[i][0]
         else:
                 x = Line1[i][1]
         sortline1.append([x, Line1[i]])
     sortline1 = sorted(sortline1,key = lambda s: s[0])
+    # if len(sortline1)<4:
+    #     # вычисление минимального расстояния между линиями
+    #     dist1=width
+    #     dists=[]
+    #     for i in range(len(sortline1)-1):
+    #         cd=distlines(sortline1[i][1], sortline1[i+1][1])
+    #         dists.append(cd)
+    #         if dist1>cd:
+    #             dist1=cd
+    #     for i in range(len(sortline1)-1):
+    #         if dists[i]/dist1>1.5:
+    #             if len(sortline1[i][1]==1):
+    #                 x=(sortline1[i][1]+sortline1[i+1][1])/2
+    #                 sortline1.append([x, [x]])
+    #             else:
+    #                 x1 = 0
+    #                 y1 = sortline1[i][1][0]*x1 + sortline1[i][1][1]
+    #                 x2 = 0
+    #                 y2 = sortline1[i][1][0]*x2 + sortline1[i][1][1]
+    #                 xc= (x1+x2)/2
+    #                 yc= (y1+y2)/2
+    #                 nk=sortline1[i][1][0]
+    #                 nb=nk*xc - yc
+    #                 if abs(mainL1) > 0.7:
+    #                     x = (-nb)/nk
+    #                 else:
+    #                     x = nb
+    #                 sortline1.append([x, [nk,nb]])
 
+                # sortline1.append([x, Line1[i]])
     sortline2=[]
     for i in range(len(Line2)):
         if abs(mainL2) > 0.7:
@@ -309,7 +346,13 @@ def showCoordinates():
     #                 break
     matrix = [[1,1,1],[1,1,1],[1,1,1]] 
     # 1 is black
-    
+    if len(sortline1)==6:
+        del sortline1[5]
+        del sortline1[0]
+    if len(sortline2)==6:
+        del sortline2[5]
+        del sortline2[0]
+
     for i in range(len(sortline1)-1):
         for j in range(len(sortline2)-1):
             if len(sortline1[i][1]) != 1 and len(sortline2[j][1]) != 1:
@@ -319,14 +362,14 @@ def showCoordinates():
                 y2 = x2 * sortline1[i+1][1][0] + sortline1[i+1][1][1]
                 x= int((x1 + x2 )/ 2)
                 y = int((y1 + y2)/2)
-                # if not(likecolor(getColorR(x,y), blackColor)):
-                #     matrix[i][j] = 0
+                if not(likecolor(getColorR(x,y), blackColor)):
+                    matrix[i][j] = 0
 
     # xlabel('x')
     # ylabel('y')
     # title('Example')
     sum1 = matrix[0][0] + matrix[0][2] + matrix[2][0]+ matrix[2][2]
-    show()
+    # show()
     if sum1 != 3:
         return -1
     else:
@@ -552,8 +595,8 @@ def testRegion(masCen):
     #             im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
     # showCoordinates([], im)
     global im, blackColor, Grayscale
-    figure()
-    imshow(im)
+    # figure()
+    # imshow(im)
     for i in range(len(masCen)):
         x0 = masCen[i][0]
         y0 = masCen[i][1]        
@@ -613,77 +656,77 @@ def testRegion(masCen):
             if [x0,y0,x1,y1] not in linepnts and [x1,y1,x0,y0] not in linepnts:
                 linepnts.append([x0,y0,x1,y1])
                 appendLine(x0,y0,x1,y1)
-                plot([x1,x0],[y1,y0],"g")
+                # plot([x1,x0],[y1,y0],"g")
     
-    # searching borders
-    y=int((top + bottom) / 2)
-    y1 = y + 5    
-    x1=-1
-    for x in range(right+5, width):
-        if not likecolor(blackColor, Grayscale[y1][x]):
-            x1 = x
-            break
-    y2 = y - 5
-    x2=-1
-    for x in range(right+5, width):
-        if not likecolor(blackColor, Grayscale[y2][x]):
-            x2 = x
-            break
+    # # searching borders
+    # y=int((top + bottom) / 2)
+    # y1 = y + 5    
+    # x1=-1
+    # for x in range(right+5, width):
+    #     if not likecolor(blackColor, Grayscale[y1][x]):
+    #         x1 = x
+    #         break
+    # y2 = y - 5
+    # x2=-1
+    # for x in range(right+5, width):
+    #     if not likecolor(blackColor, Grayscale[y2][x]):
+    #         x2 = x
+    #         break
     
-    if x1!=-1 and x2!=-1:
-        appendBorder(x2,y2,x1,y1)
-        plot([x1,x2],[y1,y2],"r")
-    x1=-1
-    for x in range(left-5, 0,-1):
-        if not likecolor(blackColor, Grayscale[y1][x]):
-            x1 = x
-            break
-    x2=-1
-    for x in range(left-5, 0,-1):
-        if not likecolor(blackColor, Grayscale[y2][x]):
-            x2 = x
-            break
+    # if x1!=-1 and x2!=-1:
+    #     appendBorder(x2,y2,x1,y1)
+    #     plot([x1,x2],[y1,y2],"r")
+    # x1=-1
+    # for x in range(left-5, 0,-1):
+    #     if not likecolor(blackColor, Grayscale[y1][x]):
+    #         x1 = x
+    #         break
+    # x2=-1
+    # for x in range(left-5, 0,-1):
+    #     if not likecolor(blackColor, Grayscale[y2][x]):
+    #         x2 = x
+    #         break
     
-    if x1!=-1 and x2!=-1:
-        appendBorder(x2,y2,x1,y1)
-        plot([x1,x2],[y1,y2],"r")
+    # if x1!=-1 and x2!=-1:
+    #     appendBorder(x2,y2,x1,y1)
+    #     plot([x1,x2],[y1,y2],"r")
     
 
-    x=int((left + right) / 2)
-    x1 = y + 5    
-    y1=-1
-    for y in range(top+5, heigth):
-        if not likecolor(blackColor, Grayscale[y][x1]):
-            y1 = y
-            break
-    x2 = x - 5
-    y2=-1
-    for y in range(top+5, heigth):
-        if not likecolor(blackColor, Grayscale[y][x2]):
-            y2 = y
-            break
+    # x=int((left + right) / 2)
+    # x1 = y + 5    
+    # y1=-1
+    # for y in range(top+5, heigth):
+    #     if not likecolor(blackColor, Grayscale[y][x1]):
+    #         y1 = y
+    #         break
+    # x2 = x - 5
+    # y2=-1
+    # for y in range(top+5, heigth):
+    #     if not likecolor(blackColor, Grayscale[y][x2]):
+    #         y2 = y
+    #         break
     
-    if y1!=-1 and y2!=-1:
-        appendBorder(x2,y2,x1,y1)
-        plot([x1,x2],[y1,y2],"b")
-    y1=-1
-    for y in range(bottom-5, 0,-1):
-        if not likecolor(blackColor, Grayscale[y][x1]):
-            y1 = y
-            break
-    y2=-1
-    for y in range(left-5, 0,-1):
-        if not likecolor(blackColor, Grayscale[y][x2]):
-            y2 = y
-            break
+    # if y1!=-1 and y2!=-1:
+    #     appendBorder(x2,y2,x1,y1)
+    #     plot([x1,x2],[y1,y2],"b")
+    # y1=-1
+    # for y in range(bottom-5, 0,-1):
+    #     if not likecolor(blackColor, Grayscale[y][x1]):
+    #         y1 = y
+    #         break
+    # y2=-1
+    # for y in range(left-5, 0,-1):
+    #     if not likecolor(blackColor, Grayscale[y][x2]):
+    #         y2 = y
+    #         break
     
-    if y1!=-1 and y2!=-1:
-        appendBorder(x2,y2,x1,y1)
-        plot([x1,x2],[y1,y2],"b")
+    # if y1!=-1 and y2!=-1:
+    #     appendBorder(x2,y2,x1,y1)
+    #     plot([x1,x2],[y1,y2],"b")
 
 
     
-    show()
+    # show()
     
     
 def find_dist(x1,y1,x2,y2):
@@ -1066,20 +1109,20 @@ for q in range(int(image_cnt)):
     clist=find_corner_center(corners)
 
 
-    im = Image.new("RGB", (width, heigth))
+    # im = Image.new("RGB", (width, heigth))
 
-    for i in range(heigth):
-        for j in range(width):
-            if corners[i][j]==20:
-                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
-            elif corners[i][j]==1:# Harris points
-                im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
-            elif corners[i][j]==3:# Center of Harris points
-                im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
-            elif corners[i][j]==7: # Harris points in region
-                im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
-            else:
-                im.putpixel((j, i), (Grayscale[i][j], Grayscale[i][j],Grayscale[i][j]))
+    # for i in range(heigth):
+    #     for j in range(width):
+    #         if corners[i][j]==20:
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+    #         elif corners[i][j]==1:# Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#00FF00', 'RGB'))
+    #         elif corners[i][j]==3:# Center of Harris points
+    #             im.putpixel((j, i), ImageColor.getcolor('#0000FF', 'RGB'))
+    #         elif corners[i][j]==7: # Harris points in region
+    #             im.putpixel((j, i), ImageColor.getcolor('#FF0000', 'RGB'))
+    #         else:
+    #             im.putpixel((j, i), (Grayscale[i][j], Grayscale[i][j],Grayscale[i][j]))
     # figure()
     # imshow(im)
     # show()

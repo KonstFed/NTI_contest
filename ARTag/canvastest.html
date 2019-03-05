@@ -1,0 +1,269 @@
+<html>
+    <head>
+        <script>
+function harristest(){
+    var h=harris(images.data[0]);
+    newImg = images.data[0];
+    var height=h.length;
+
+    var width=h[0].length
+    if (canvas.getContext) {
+        var ctx = canvas.getContext('2d');
+        for (row = 0;row<height;row++)
+        {
+            for (col = 0;col<width;col++)
+            {
+                if(h[row][col]>harrisPoint){
+                    // ctx.fillStyle = "rgba(0,0,255,1)";
+                    // ctx.fillRect( col, row, 1, 1 );
+                    newImg[row][col] = -2;
+                };
+            }
+        }
+        HarrisDecrease(newImg);
+        for (row = 0;row<height;row++)
+        {
+            for (col = 0;col<width;col++)
+            {
+                if(newImg[row][col] == -6){
+                    borderPoints.push({x:col,y:row});
+                    ctx.fillStyle = "rgba(0,0,255,1)";
+                    ctx.fillRect( col, row, 1, 1 );
+                };
+            }
+        }    
+    }
+
+}
+
+
+
+function onMouseClick(e) {
+
+    var c = document.getElementById("canvas");
+    
+    var height=newImage.length;
+    var width=newImage[0].length
+    var clickX;
+    var clickY;
+    if (e.pageX || e.pageY) { 
+        clickX = e.pageX;
+        clickY = e.pageY;
+    }
+    else { 
+        clickX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+        clickY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+    } 
+    clickX -= c.offsetLeft;
+    clickY -= c.offsetTop;
+    x = clickX;
+    y = clickY;
+    if(newImage && y<newImage.length && x<newImage[0].length && newImage[y][x]>20)
+        {
+        
+        var ctx = c.getContext("2d");       
+        var line=seekline(newImage, x, y);
+        searchcorners(newImage)
+        var canvas = document.getElementById('canvas');
+        canvas.width=width;
+        canvas.height=height;
+        if (canvas.getContext) {
+            var ctx = canvas.getContext('2d');
+            for (row = 0;row<height;row++)
+            {
+                for (col = 0;col<width;col++)
+                {
+                    if(newImage[row][col]==-1){
+                        ctx.fillStyle = "rgba(255,0,0,1)";
+                        ctx.fillRect( col, row, 1, 1 );
+                    };
+                    if(newImage[row][col]==-2){
+                        ctx.fillStyle = "rgba(0,255,0,1)";
+                        ctx.fillRect( col, row, 1, 1 );
+                    };
+                    
+                }
+            }
+
+    
+        }
+        // ctx.beginPath();
+        // ctx.lineWidth = 5;
+        // ctx.strokeStyle = '#FF0000';
+        // ctx.moveTo(line.p1.x, line.p1.y);
+        // ctx.lineTo(line.p2.x, line.p2.y);
+        // ctx.stroke();
+        }
+    
+}
+
+function erasesobel()
+{
+    erase(newImage);
+    draw(images.width, images.heigth, newImage);
+}
+function init(){
+    document.addEventListener("click", onMouseClick, false);
+    document.addEventListener('mousemove', function(e) {
+        var c = document.getElementById("canvas");
+            var clickX;
+            var clickY;
+            if (e.pageX || e.pageY) { 
+                clickX = e.pageX;
+                clickY = e.pageY;
+            }
+            else { 
+                clickX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+                clickY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+            } 
+            clickX -= c.offsetLeft;
+            clickY -= c.offsetTop;
+            x = clickX;
+            y = clickY;
+            // if(newImage && e.clientY<newImage.length && e.clientX<newImage[0].length  newImage[y][x]>20)
+            // {
+            console.log(x,y)
+      });
+    
+    
+
+}
+function showAllLines()
+{
+}
+
+
+function draw(width, height, data) {
+    var canvas = document.getElementById('canvas');
+    canvas.width=width;
+    canvas.height=height;
+    if (canvas.getContext) {
+        var ctx = canvas.getContext('2d');
+        for (row = 0;row<height;row++)
+        {
+            for (col = 0;col<width;col++)
+            {
+                c = data[row][col];
+                ctx.fillStyle = "rgba("+c+","+c+","+c+","+1+")";
+                ctx.fillRect( col, row, 1, 1 );
+            }
+        }
+
+    // ctx.fillRect(25,25,100,100);
+    // ctx.clearRect(45,45,60,60);
+    // ctx.strokeRect(50,50,50,50);
+  }
+}
+var borderPoints = [];
+var images;
+var newImage;
+var harrisPoint = 1000000000;
+function sobel_test()
+{
+    newImage = sobel(images.data[0]);
+    draw(images.width, images.heigth, newImage);
+}
+function test(){
+
+    var txtaarea = document.getElementById('txtdata');
+    images=loaddata(txtaarea.value.trim());
+    draw(images.width, images.heigth, images.data[0]);
+    // sobel_test();
+}
+function border()
+{
+    img = images.data[0];
+    bestb = findBorders(borderPoints,img);
+    var canvas = document.getElementById("canvas");
+    if (canvas.getContext) {
+        var ctx = canvas.getContext('2d');
+
+        ctx.strokeStyle = "red";
+        // ctx.moveTo(bestb.p1.x, bestb.p1.y)
+        // ctx.lineTo(bestb.p2.x,bestb.p2.y)
+        // ctx.lineTo(bestb.p4.x,bestb.p4.y)
+        // ctx.moveTo(bestb.p2.x, bestb.p2.y)
+        // ctx.lineTo(bestb.p3.x,bestb.p3.y)
+        // ctx.moveTo(bestb.p3.x, bestb.p3.y)
+        // ctx.lineTo(bestb.p4.x,bestb.p4.y)
+        // ctx.beginPath();
+        // ctx.moveTo(0, 0);
+        // ctx.lineTo(100, 100);  
+        // ctx.stroke()
+        if (bestb.length <4){
+            console.log("Убе");
+        }
+        ctx.beginPath();
+        ctx.moveTo(bestb.p1.x, bestb.p1.y);
+        ctx.lineTo(bestb.p2.x, bestb.p2.y);  
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bestb.p2.x, bestb.p2.y);
+        ctx.lineTo(bestb.p3.x, bestb.p3.y);  
+        ctx.stroke();       
+        ctx.beginPath();
+        ctx.moveTo(bestb.p3.x, bestb.p3.y);
+        ctx.lineTo(bestb.p4.x, bestb.p4.y);  
+        ctx.stroke();        
+        ctx.beginPath();
+        ctx.moveTo(bestb.p4.x, bestb.p4.y);
+        ctx.lineTo(bestb.p1.x, bestb.p1.y);  
+        ctx.stroke();
+        // ctx.fillRect( bestb.p1.y, bestb.p1.x, 1, 1 );
+        // ctx.fillRect( bestb.p2.y, bestb.p2.x, 1, 1 );
+        // ctx.fillRect( bestb.p3.y, bestb.p3.x, 1, 1 );
+        // ctx.fillRect( bestb.p4.y, bestb.p4.x, 1, 1 );
+
+    }
+}
+function loadImage() {
+    // Create an empty canvas element
+    var url = 'src/qr1.jpg';
+var img = new Image();
+img.src = url + '?' + new Date().getTime();
+img.setAttribute('crossOrigin', '');
+
+    var canvas = document.createElement("canvas");
+    //var img = document.getElementById('vimg');
+    //img.crossOrigin = "";
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Copy the image contents to the canvas
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    // Get the data-URL formatted image
+    // Firefox supports PNG and JPEG. You could check img.src to
+    // guess the original format, but be aware the using "image/jpg"
+    // will re-encode the image.
+    var data = ctx.getImageData(0, 0, 1, 1)
+    
+
+    return data;
+}
+        </script>
+        <script src="ArtagForInnop.js"></script>
+        <script src="operation_matrix.js"></script>
+    </head>
+<body >
+    
+   <canvas id="canvas" width="150" height="150"></canvas>
+<!-- <body onload="init()"></body> -->
+<textarea id="txtdata">
+</textarea>
+<!-- <body onload="init()"></body> -->
+
+<button onclick="test()">Load txt image</button>
+<button onclick="sobel_test()">Sobel</button>
+<button onclick="erasesobel()">Erase</button>
+<button onclick="harristest()">Harris</button>
+<button onclick="loadImage()">Load image from jpg</button>
+<button onclick="border()">Borders</button>
+
+<br/> 
+
+<img1 src="https://pp.userapi.com/c849524/v849524065/13b5fa/fbA3gH4tGIA.jpg" id="vimg"/>
+ </body>
+</html>
+
