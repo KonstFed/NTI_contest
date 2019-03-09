@@ -128,9 +128,7 @@ function init(){
     
 
 }
-function showAllLines()
-{
-}
+
 
 
 function draw(width, height, data) {
@@ -154,10 +152,11 @@ function draw(width, height, data) {
     // ctx.strokeRect(50,50,50,50);
   }
 }
+var bestb = [];
 var borderPoints = [];
 var images;
 var newImage;
-var harrisPoint = 1000000000;
+var harrisPoint = 100000000;
 function sobel_test()
 {
     newImage = sobel(images.data[0]);
@@ -216,6 +215,35 @@ function border()
 
     }
 }
+
+function isBlackCage(p1,p2,img)
+{
+    black_bias = 60;
+    cnt = 0;
+    cntall = 0;
+    if (img == undefined)
+    {
+        console.log("wfdssdsfwqsa")
+    }
+    for (var i = Math.round(p1.y); i<=Math.round(p2.y); i++)
+    {
+        for (j = Math.round(p1.x); j<Math.round(p2.x); j++)
+        {
+            if (img[i][j]<black_bias)
+            {
+                cnt++;
+            }
+            cntall++;
+        }
+    }
+    if ((cnt/cntall)>0.6) return true; 
+    else return false;
+}
+function count_artag()
+{
+    artag_matrix(bestb,images.data[0]);
+}
+
 function loadImage() {
     // Create an empty canvas element
     var url = 'src/qr1.jpg';
@@ -260,6 +288,7 @@ img.setAttribute('crossOrigin', '');
 <button onclick="harristest()">Harris</button>
 <button onclick="loadImage()">Load image from jpg</button>
 <button onclick="border()">Borders</button>
+<button onclick="count_artag()">COUNT FINAL SUPER ARTAG</button>
 
 <br/> 
 

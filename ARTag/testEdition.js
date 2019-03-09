@@ -1,12 +1,26 @@
 // fs = require("fs");
+function ARTag(mas)
+{
 var threshold=50;
 function Grayscale(rgb) {
     // m = rgb.match(/^#([0-9a-f]{6})$/i)[1];
-    m = rgb;
+// Временный костыль
+    
+
+    r = Math.floor(rgb/(256*256));
+    g = Math.floor(rgb%(256*256)/256);
+    b = Math.floor((rgb%256)/256)
     // if( m) {
-    return (parseInt(m.substr(0,2),16)*0.299 + parseInt(m.substr(2,2),16)*0.587 + parseInt(m.substr(4,2),16)*0.114);
+    return (r*0.299 + g*0.587 + b*0.114);
     // }
 }
+// function Grayscale(rgb) {
+//     // m = rgb.match(/^#([0-9a-f]{6})$/i)[1];
+//     m = rgb.trim();
+//     // if( m) {
+//     return (parseInt(m.substr(0,2),16)*0.299 + parseInt(m.substr(2,2),16)*0.587 + parseInt(m.substr(4,2),16)*0.114);
+//     // }
+// }
 function GetW(i,j){
   if (i==j){
       return 0.36;
@@ -34,10 +48,11 @@ function HarrisDecrease(newImage)
             cur = stack.shift();
             
             newImage[cur.y][cur.x]=-3;
-            for (i in [-1,0,1]){
-                for (j in [-1,0,1]){
-                    i = parseInt(i);
-                    j = parseInt(j);
+            var tmp = [-1,0,1]
+            for ( var iz = 0; iz<tmp.length;iz++){
+                for (var jz = 0; jz <tmp.length;jz++){
+                    i = parseInt(tmp[iz]);
+                    j = parseInt(tmp[jz]);
                     if ((cur.y+i>=image.length) || (cur.y+i<0)) continue;
 
                     if ((cur.x+j >= image[0].length) || (cur.x+j <0)) continue;
@@ -61,6 +76,7 @@ function HarrisDecrease(newImage)
     {
         for (col = 0; col < newImage[0].length; col++)
         {
+
             if (newImage[row][col]==-2)
             {
                 point = widthAlg(row,col,newImage);
@@ -215,10 +231,7 @@ function isBlackCage(p1,p2,img)
     black_bias = 60;
     cnt = 0;
     cntall = 0;
-    if (img == undefined)
-    {
-        console.log("wfdssdsfwqsa")
-    }
+
     for (var i = Math.round(p1.y); i<=Math.round(p2.y); i++)
     {
         for (j = Math.round(p1.x); j<Math.round(p2.x); j++)
@@ -266,20 +279,30 @@ function artag_matrix(points,img,bias = 6)
     // }
     // points.sort(comparex);
     // dify = Math.abs(points[0].y - points[1].y);
-    // points.sort(comparey);
-    difx = Math.abs(points.p3.x - points.p1.x)/bias;
-    dify = Math.abs(points.p3.y - points.p1.y)/bias;
+    // points.sort(comparey)
+    function sortPo(a,b)
+    {
+        return a[0] - b[0];
+    }
+    po = [[points.p1.x+points.p1.y,0],[points.p2.x+points.p2.y,1],[points.p3.x+points.p3.y,2],[points.p4.x+points.p4.y,3]]
+    pointse = [points.p1,points.p2,points.p3,points.p4]
+
+    po.sort(sortPo);
+    difx = Math.abs(pointse[po[0][1]].x - pointse[po[3][1]].x)/bias;
+    dify = Math.abs(pointse[po[0][1]].y - pointse[po[0][1]].x)/bias;
     matrix = []
     r = 0;
-    p1x = Math.min(points.p1.x,points.p3.x);
-    p3x = Math.max(points.p1.x,points.p3.x);
-    p1y = Math.min(points.p1.y,points.p3.y);
-    p3y = Math.max(points.p1.y,points.p3.y);
+    p1x = Math.min(pointse[0].x,pointse[1].x,pointse[2].y,pointse[3].y)
+    p3x = Math.max(pointse[0].x,pointse[1].x,pointse[2].y,pointse[3].y);
+    p1y = Math.min(pointse[2].y,pointse[3].y,pointse[0].y,pointse[1].y);
+    p3y = Math.max(pointse[2].y,pointse[3].y,pointse[0].x,pointse[1].x);
+    difx = Math.abs(p1x - p3x) / bias;
+    dify = Math.abs(p1y - p3y) / bias;
 
-    for (var row = dify*2+p1y;row<=p3y-dify;row += dify)
+    for (var row = dify+p1y;row<=p3y-dify-4;row += dify)
     {
         matrix.push([])
-        for (var col = difx*2 + p1x; col <=  p3x-difx; col += difx)
+        for (var col = difx + p1y; col <= p3y- difx-4; col += difx)
         {
             if (isBlackCage({x:col-difx,y:row-dify},{x:col,y:row},img))
             {
@@ -323,13 +346,10 @@ function artag_matrix(points,img,bias = 6)
         var y = answ[9] + "" + answ[10] + "" + answ[11];
 
     
-        console.log("n: "+parseInt(n,2)+" x: "+parseInt(x,2)+" y:"+parseInt(y,2))
-        console.log(points.p1.x + " " + points.p1.y + " "+points.p2.x +" " + points.p2.y +" " +points.p3.x+" "+points.p3.y + " " +points.p4.x+" "+points.p4.y)
-
+        return {n:parseInt(n,2),x:parseInt(x,2),y:parseInt(y,2)};
     }
     else
     {
-        console.log("0")
         return {n:-1,x:-1,y:-1};
     }
 
@@ -351,12 +371,16 @@ function findBorders(harisP,img)
     harPoints = []
     for (var s = 0; s < harisP.length-1;s++)
     {
-        if (distance(harisP[s].x,harisP[s].y,harisP[s+1].x,harisP[s+1].y)<5)
+        for (var gf = s; gf<harisP.length;gf++)
         {
-            harPoints.push({x:Math.trunc((harisP[s].x+harisP[s].x)/2),y:Math.trunc((harisP[s].y+harisP[s+1].y)/2)})
-            s++;
+            if (distance(harisP[s].x,harisP[s].y,harisP[s+1].x,harisP[s+1].y)<5)
+            {
+                // harPoints.push({x:Math.trunc((harisP[s].x+harisP[s].x)/2),y:Math.trunc((harisP[s].y+harisP[s+1].y)/2)})
+                harisP.splice(s,2,{x:Math.trunc((harisP[s].x+harisP[s].x)/2),y:Math.trunc((harisP[s].y+harisP[s+1].y)/2)})
+                s++;
+            }
+            // else harPoints.push({x:harisP[s].x,y:harisP[s].y})
         }
-        else harPoints.push({x:harisP[s].x,y:harisP[s].y})
     }
     // harisP = harPoints.sort; 
     for (f = 0; f <harisP.length; f++)
@@ -374,7 +398,7 @@ function findBorders(harisP,img)
                     // if (harisP[f].x)
                     // var thisEval = (evaluation(harisP[f].x,harisP[f].y,harisP[s].x,harisP[s].y,img) + evaluation(harisP[s].x,harisP[s].y,harisP[t].x,harisP[t].y,img)+evaluation(harisP[t].x, harisP[t].y, harisP[d].x, harisP[d].y, img)+evaluation(harisP[d].x,harisP[d].y,harisP[f].x,harisP[f].y,img))/4
                     var thisEval = (rect_eval(harisP[f],harisP[s],harisP[st],harisP[d],img));
-                    if (thisEval>0.5)
+                    if (thisEval>=0.1)
                     {
                         ln = distance(harisP[f].x,harisP[f].y,harisP[s].x,harisP[s].y) + distance(harisP[f].x,harisP[f].y,harisP[d].x,harisP[d].y) + distance(harisP[s].x,harisP[s].y,harisP[st].x,harisP[st].y) + distance(harisP[st].x,harisP[st].y,harisP[d].x,harisP[d].y);
                         if (ln>best.l)
@@ -677,6 +701,7 @@ function sobel2(image)
     for (y = 0; y < height; y++) {
         gradient.push([])
         for (x = 0; x < width; x++) {
+            // непонятный баг: не идет по циклу а просто увеличивает итератор
             var pixelX = (
                 (kernelX[0][0] * pixelAt(x - 1, y - 1)) +
                 (kernelX[0][1] * pixelAt(x, y - 1)) +
@@ -708,37 +733,77 @@ function sobel2(image)
     }
     return gradient
 }
-
+function gauss_filter(image)
+{
+    function sumOfMatrix(m)
+    {
+        var sum = 0;
+        for (var row = 0; row < m.length;row++)
+        {
+            for (col  = 0;col<m[0].length;col++){
+                sum = sum + m[row][col]
+            }
+        }
+        return sum;
+    }
+    function mult_ma(m1,m2)
+    {
+        m3 = [[0,0,0],[0,0,0],[0,0,0]]
+        for (var row = 0;row<m1.length;row++)
+        {
+            for (var col = 0;col<m1[0].length;col++)
+            {
+                m3[row][col] = m1[row][col] * m2[row][col]
+            }
+        }
+        return m3
+    }
+    newImg = image;
+    coef = [[1,2,1],[2,4,2],[1,2,1]]
+    for (var j = 1; j<image.length-1;j++)
+    {
+        for (var i = 1; i < image[0].length-1;i++)
+        {
+            matrix = [ [image[j-1][i-1],image[j-1][i],image[j-1][i+1]], [image[j][i-1],image[j][i],image[j][i+1]],[image[j+1][i-1],image[j+1][i],image[j+1][i+1]]]
+            var cur = mult_ma(coef,matrix);
+            newImg[j][i] = sumOfMatrix(cur)/16;
+        }
+    }
+    return newImg;
+}
 function loaddata(data){
-    data = data.split("\n");
-    var dataset = data[0].split(" ");
-    cnt_im = parseInt(dataset[0]);
-    heigth = parseInt(dataset[1]);
-    width = parseInt(dataset[2]);
+    // data = data.split("\n");
+    // var dataset = data[0].split(" ");
+    cnt_im = 1;
+    heigth = 120;
+    width = 160;
     images = [];
     j = 1;
     cnt_err = 0;
     for (i = 0;i<cnt_im;i++)
     {
         images.push([]);
-        row = 0;
+        // row = 0;
     
-        for (h = i * heigth;h<=(i+1)*heigth;h++)
+        for (h = 0;h<heigth;h++)
         {
-            if (h== 0)
-                continue;
-            curdata = data[h].trim().split(" ");
+            // curdata = data[h].trim().split(" ");
             images[i].push([]);
-            images[i][row].push([]);
+            images[i][h].push([]);
     
-            for (w = 0; w < curdata.length-1;w++)
+            for (w = 0; w < width ;w++)
             {
-                if (curdata[w].length !=6)
-                    cnt_err++;
-                images[i][row][w] = Grayscale(curdata[w]);
+                // if (data[h*width+w]== undefined)
+                // {
+                //     console.log("help")
+                // }
+                images[i][h][w] = Grayscale(data[h*width+w]);
+                // if (images[i][h][w] == NaN)
+                // {
+                //     console.log("ds")
+                // }
                 
             }
-            row=row + 1;
     
         }
         // while (j<(i+1)*heigth)
@@ -747,7 +812,9 @@ function loaddata(data){
         //     j++;
         // } 
     }
-    return {imagecnt:cnt_im, heigth:heigth, width:width, data:images};
+    img =images[0]
+    img = gauss_filter(img);
+    return {imagecnt:cnt_im, heigth:heigth, width:width, data:img};
 }
 
 
@@ -787,3 +854,346 @@ function indeficate(image)
 // else{
 //     console.log("fail");
 // }
+function harristest(image){
+    var h=harris(image);
+    newImg = image;
+    var height=h.length;
+    var cnt = 0;
+    var width=h[0].length
+        for (row = 0;row<height;row++)
+        {
+            for (col = 0;col<width;col++)
+            {
+                if(h[row][col]>harrisPoint){
+                    // ctx.fillStyle = "rgba(0,0,255,1)";
+                    // ctx.fillRect( col, row, 1, 1 );
+                    newImg[row][col] = -2;
+                    cnt++;
+                };
+            }
+        }
+        // console.log(cnt)
+        cnt = 0;
+        HarrisDecrease(newImg);
+        for (row = 0;row<height;row++)
+        {
+            for (col = 0;col<width;col++)
+            {
+                if(newImg[row][col] == -6){
+                    borderPoints.push({x:col,y:row});
+                    // ctx.fillStyle = "rgba(0,0,255,1)";
+                    // ctx.fillRect( col, row, 1, 1 );
+                    cnt++;
+                };
+            }
+        } 
+        // console.log(cnt)
+        return borderPoints;   
+    }
+
+
+
+
+
+// function onMouseClick(e) {
+
+//     var c = document.getElementById("canvas");
+    
+//     var height=newImage.length;
+//     var width=newImage[0].length
+//     var clickX;
+//     var clickY;
+//     if (e.pageX || e.pageY) { 
+//         clickX = e.pageX;
+//         clickY = e.pageY;
+//     }
+//     else { 
+//         clickX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+//         clickY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+//     } 
+//     clickX -= c.offsetLeft;
+//     clickY -= c.offsetTop;
+//     x = clickX;
+//     y = clickY;
+//     if(newImage && y<newImage.length && x<newImage[0].length && newImage[y][x]>20)
+//         {
+        
+//         var ctx = c.getContext("2d");       
+//         var line=seekline(newImage, x, y);
+//         searchcorners(newImage)
+//         var canvas = document.getElementById('canvas');
+//         canvas.width=width;
+//         canvas.height=height;
+//         if (canvas.getContext) {
+//             var ctx = canvas.getContext('2d');
+//             for (row = 0;row<height;row++)
+//             {
+//                 for (col = 0;col<width;col++)
+//                 {
+//                     if(newImage[row][col]==-1){
+//                         ctx.fillStyle = "rgba(255,0,0,1)";
+//                         ctx.fillRect( col, row, 1, 1 );
+//                     };
+//                     if(newImage[row][col]==-2){
+//                         ctx.fillStyle = "rgba(0,255,0,1)";
+//                         ctx.fillRect( col, row, 1, 1 );
+//                     };
+                    
+//                 }
+//             }
+
+    
+//         }
+//         // ctx.beginPath();
+//         // ctx.lineWidth = 5;
+//         // ctx.strokeStyle = '#FF0000';
+//         // ctx.moveTo(line.p1.x, line.p1.y);
+//         // ctx.lineTo(line.p2.x, line.p2.y);
+//         // ctx.stroke();
+//         }
+    
+// }
+
+function erasesobel()
+{
+    erase(newImage);
+    draw(images.width, images.heigth, newImage);
+}
+// function init(){
+//     document.addEventListener("click", onMouseClick, false);
+//     document.addEventListener('mousemove', function(e) {
+//         var c = document.getElementById("canvas");
+//             var clickX;
+//             var clickY;
+//             if (e.pageX || e.pageY) { 
+//                 clickX = e.pageX;
+//                 clickY = e.pageY;
+//             }
+//             else { 
+//                 clickX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+//                 clickY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+//             } 
+//             clickX -= c.offsetLeft;
+//             clickY -= c.offsetTop;
+//             x = clickX;
+//             y = clickY;
+//             // if(newImage && e.clientY<newImage.length && e.clientX<newImage[0].length  newImage[y][x]>20)
+//             // {
+//             console.log(x,y)
+//       });
+    
+    
+
+// }
+
+
+
+// function draw(width, height, data) {
+//     var canvas = document.getElementById('canvas');
+//     canvas.width=width;
+//     canvas.height=height;
+//     if (canvas.getContext) {
+//         var ctx = canvas.getContext('2d');
+//         for (row = 0;row<height;row++)
+//         {
+//             for (col = 0;col<width;col++)
+//             {
+//                 c = data[row][col];
+//                 ctx.fillStyle = "rgba("+c+","+c+","+c+","+1+")";
+//                 ctx.fillRect( col, row, 1, 1 );
+//             }
+//         }
+
+//     // ctx.fillRect(25,25,100,100);
+//     // ctx.clearRect(45,45,60,60);
+//     // ctx.strokeRect(50,50,50,50);
+//   }
+// }
+var bestb = [];
+var borderPoints = [];
+var images;
+var newImage;
+var harrisPoint = 100000000;
+function sobel_test()
+{
+    newImage = sobel(images.data[0]);
+    // draw(images.width, images.heigth, newImage);
+}
+function test(text){
+
+    // var txtaarea = document.getElementById('txtdata');
+    images=loaddata(text).data;
+    // draw(images.width, images.heigth, images.data[0]);
+    // sobel_test();
+    return images
+}
+function border(img,bordp)
+{
+    bestb = findBorders(bordp,img);
+    // var canvas = document.getElementById("canvas");
+    // if (canvas.getContext) {
+    //     var ctx = canvas.getContext('2d');
+
+    //     ctx.strokeStyle = "red";
+        // ctx.moveTo(bestb.p1.x, bestb.p1.y)
+        // ctx.lineTo(bestb.p2.x,bestb.p2.y)
+        // ctx.lineTo(bestb.p4.x,bestb.p4.y)
+        // ctx.moveTo(bestb.p2.x, bestb.p2.y)
+        // ctx.lineTo(bestb.p3.x,bestb.p3.y)
+        // ctx.moveTo(bestb.p3.x, bestb.p3.y)
+        // ctx.lineTo(bestb.p4.x,bestb.p4.y)
+        // ctx.beginPath();
+        // ctx.moveTo(0, 0);
+        // ctx.lineTo(100, 100);  
+        // ctx.stroke()
+        // if (bestb.length <4){
+        //     console.log("Убе");
+        // }
+        // ctx.beginPath();
+        // ctx.moveTo(bestb.p1.x, bestb.p1.y);
+        // ctx.lineTo(bestb.p2.x, bestb.p2.y);  
+        // ctx.stroke();
+        // ctx.beginPath();
+        // ctx.moveTo(bestb.p2.x, bestb.p2.y);
+        // ctx.lineTo(bestb.p3.x, bestb.p3.y);  
+        // ctx.stroke();       
+        // ctx.beginPath();
+        // ctx.moveTo(bestb.p3.x, bestb.p3.y);
+        // ctx.lineTo(bestb.p4.x, bestb.p4.y);  
+        // ctx.stroke();        
+        // ctx.beginPath();
+        // ctx.moveTo(bestb.p4.x, bestb.p4.y);
+        // ctx.lineTo(bestb.p1.x, bestb.p1.y);  
+        // ctx.stroke();
+        // ctx.fillRect( bestb.p1.y, bestb.p1.x, 1, 1 );
+        // ctx.fillRect( bestb.p2.y, bestb.p2.x, 1, 1 );
+        // ctx.fillRect( bestb.p3.y, bestb.p3.x, 1, 1 );
+        // ctx.fillRect( bestb.p4.y, bestb.p4.x, 1, 1 );
+
+    
+}
+
+function isBlackCage(p1,p2,img)
+{
+    black_bias = 60;
+    cnt = 0;
+    cntall = 0;
+
+    for (var i = Math.round(p1.y); i<=Math.round(p2.y); i++)
+    {
+        for (j = Math.round(p1.x); j<Math.round(p2.x); j++)
+        {
+            if (img[i][j]<black_bias)
+            {
+                cnt++;
+            }
+            cntall++;
+        }
+    }
+    if ((cnt/cntall)>0.6) return true; 
+    else return false;
+}
+function count_artag()
+{
+    res = artag_matrix(bestb,images);
+    return res
+}
+
+
+var threshold= 20; // надо настроить
+
+function TransMatrix(A)       //На входе двумерный массив
+{
+    var m = A.length, n = A[0].length, AT = [];
+    for (var i = 0; i < n; i++)
+    { 
+        AT[ i ] = [];
+        for (var j = 0; j < m; j++) 
+            AT[ i ][j] = A[j][ i ];
+    }
+    return AT;
+}
+function SumMatrix(A,B)       //На входе двумерные массивы одинаковой размерности
+{   
+    var m = A.length, n = A[0].length, C = [];
+    for (var i = 0; i < m; i++)
+    { 
+        C[ i ] = [];
+        for (var j = 0; j < n; j++)
+            C[ i ][j] = A[ i ][j]+B[ i ][j];
+    }
+    return C;
+}
+function linedist(px,py,ax,ay,bx,by){
+    
+    s=Math.abs(ax*(by-py)+bx*(py-ay)+px*(ay-by))/2;
+    d=2*s/Math.sqrt((ax-bx)*(ax-bx)+(ay-by)*(ay-by));
+    return d;
+}
+
+function dist_to_line(x1,y1,x2,y2,x3,y3)
+{
+    osn = Math.sqrt((x3-x2)*(x3-x2) + (y3-y2)*(y3-y2))
+    return Math.abs(((x3-x2)*(y1 - y2)- (y3-y2)*(x1-x2))/osn)
+}
+
+function dist(x1,y1,x2,y2)
+{
+    return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+}
+
+function multMatrixNumber(a,A)  // a - число, A - матрица (двумерный массив)
+{   
+    var m = A.length, n = A[0].length, B = [];
+    for (var i = 0; i < m; i++)
+    { 
+        B[ i ] = [];
+        for (var j = 0; j < n; j++) 
+            B[ i ][j] = a*A[ i ][j];
+    }
+    return B;
+}
+
+function MultiplyMatrix(A,B)
+{
+    var rowsA = A.length, colsA = A[0].length,
+    rowsB = B.length, colsB = B[0].length,
+    C = [];
+    if (colsA != rowsB) return false;
+    for (var i = 0; i < rowsA; i++) C[ i ] = [];
+    for (var k = 0; k < colsB; k++)
+    { 
+        for (var i = 0; i < rowsA; i++)
+        { 
+            var t = 0;
+            for (var j = 0; j < rowsB; j++) 
+                t += A[ i ][j]*B[j][k];
+            C[ i ][k] = t;
+        }
+    }
+    return C;
+}
+// var fileContent = fs.readFileSync("Output2.txt", "utf8");
+image = test(mas);
+tmp = image;
+
+p = harristest(tmp);
+var borderP = border(image,p);
+res = count_artag();
+return res;
+}
+heigth = 120;
+width = 160;
+fs = require("fs");
+// var CameraPhone = fs.readFileSync("Output.txt", "utf8").trim();
+// var fileContent = fs.readFileSync("Lenin.txt", "utf8");
+var data = fs.readFileSync("xleb.txt", "utf8").trim();
+data = data.split(",");
+// data.shift();
+
+console.log(ARTag(data))
+    // Get the datma-URL formatted image
+    // Firefox supports PNG and JPEG. You could check img.src to
+    // guess the original format, but be aware the using "image/jpg"
+    // will re-encode the image.
+    

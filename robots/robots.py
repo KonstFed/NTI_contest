@@ -1,18 +1,26 @@
+
 from PIL import ImageColor, Image
 import math
 from matplotlib.pyplot import *
 import random
 
 
-labs=[['ULR','LU','U','UR','LU','UD','UD','UR'],\
-['LR','LD','RD','LR','L','RDU','LU','RD'],\
-['L','UD','U','RD','LR','UL','R','LUR'],\
-['LR','LU','','UD','D','D','R','LR'],\
-['LR','L','D','UR','LU','UR','LR','LR'],\
-['LR','LDR','LUR','LR','LR','LR','LR','LR'],\
-['L','UD','DR','LR','LRD','L','','R'],\
-['LD','UD','UD','D','DU','DR','LD','DR']]
-
+# labs=[['ULR','LU','U','UR','LU','UD','UD','UR'],\
+# ['LR','LD','RD','LR','L','RDU','LU','RD'],\
+# ['L','UD','U','RD','LR','UL','R','LUR'],\
+# ['LR','LU','','UD','D','D','R','LR'],\
+# ['LR','L','D','UR','LU','UR','LR','LR'],\
+# ['LR','LDR','LUR','LR','LR','LR','LR','LR'],\
+# ['L','UD','DR','LR','LRD','L','','R'],\
+# ['LD','UD','UD','D','DU','DR','LD','DR']]
+labs = [['UL','UD','U','UD','UD','UR','LURD','LUR'],
+['LR','LURD','LR','LUR','LURD','L','UD','DR'],
+['LD','UD','R','L','UD','R','LURD','LUR'],
+['LUR','LURD','LR','LRD','LURD','L','UD','R'],
+['L','UD','','UD','U','R','LURD','LRD'],
+['LRD','LURD','LR','LURD','LD','','UD','UR'],
+['LU','UD','','UR','LURD','LRD','LURD','LR'],
+['LRD','LURD','LD','D','UD','UD','UD','RD']]
 def left(cdir):
     if cdir=='U':
         return 'L'
@@ -159,18 +167,18 @@ def bfs(s):
                             newrobotstate.append(a2)
                             newrobotstate.append(a3)
                             stack.append(newrobotstate)
-                            drawlab()
+                            # drawlab()
                     else:
                         newrobotstate=[]
                         newrobotstate.append(a1)
                         newrobotstate.append(a2)
                         stack.append(newrobotstate)
-                        drawlab()
+                        # drawlab()
             else:
                 newrobotstate=[]
                 newrobotstate.append(a1)
                 stack.append(newrobotstate)
-                drawlab()
+                # drawlab()
 
     return False
 stack=[]
@@ -199,4 +207,4 @@ for nn in range(N):
 bfs(robots)
 for nn in range(N):
     print(results[nn])
-drawlab()
+# drawlab()
